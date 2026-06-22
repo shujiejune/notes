@@ -22,6 +22,14 @@ It's the actual worker that executes compiled assembly instructions on a physica
 A **P** represents a logical processor or scheduling context. The number of P instances is strictly capped by your machine's CPU core config (via `GOMAXPROCS`).
 P acts as the brains of the operation. It holds the **Local Run Queue (LRQ)**, a thread-safe queue of goroutines that are ready to execute. An M cannot execute a goroutine unless it captures a P.
 
+**The strict 1:1 monogamy rule at runtime**
+
+The relationship between an active thread (M) and a processor (P) is strictly 1:1 and exclusive.
+- Multiple Ms never drain the same P's LRQ simultaneously.
+- While an M holds a P, no other thread in the OS is allowed to look inside, read from, or write to that P's LRQ.
+
+The _pool_ behavior is serial, not concurrent. A P can be held by different Ms over time, but never at the exact same instant.
+
 ### Global vs. Local Run Queues
 
 To distributes work across the computer without introducing lock contention, the GMP scheduler splits goroutine traffic into 2 layers:
@@ -37,6 +45,12 @@ If a goroutine locks up on an intensive math calculation, or makes a blocking sy
 If an M finishes executing all the goroutines inside its P's LRQ, it doesn't sit idle. It executes a work stealing algo:
 - It looks at the other P contexts in the system.
 - It attempts to steal half of the runnable goroutines from a sibling P's local queue to distribute the workload evenly across all CPU cores.
+
+The LRQ inside P is implemented as a specialized **lock-free circular ring buffer** using atomic memory operations `LFQueue`.
+The ring buffer separates access by opposite ends of the queue:
+- the owner thread (M1): Always pops goroutines from the head of its own P's queue.
+- the thief thread (M2): Always steals goroutines from the tail of the sibling P's queue.
+Because the owner is busy at the head and the thief is quietly harvesting at the tail, they can manipulate the pointers using atomic CPU instructions `sync/atomic` without ever colliding, requiring a mutex lock, or breaking the owner's execution flow.
 
 **B. Hand-Off (Handling Blocking Syscalls)**
 
@@ -166,8 +180,125 @@ If there were no P layer, those 250 tasks would be stranded on the frozen thread
 
 ## 7. At what point does the Go runtime create Ps and Ms?
 
+### Startup Phase
+
+When you click run on a compiled Go binary, the OS bootstrap loads the executable into memory and jumps to the runtime initialization code `src/runtime/proc.go`.
+At this moment, `main()` hasn't started yet. The runtime executes the following strict chronological sequence:
+1. Hardware Inspection (`schedinit`): The runtime calls `runtime.NumCPU()` to look at the machine's hardware and count its logical hyper-threads.
+2. Read Configuration: It checks if you have overriden the CPU ceiling using the environment variable `GOMAXPROCS`. If not, it sets `GOMAXPROCS` to match your machine's logical threads.
+3. Allocate the P Array (`procresize`): The runtime executes an internal function called `procresize()`. The function allocates a static, fixed-size slice in memory to hold the Ps.
+4. Instantiate the Ps: The runtime instantiates exactly `GOMAXPROCS` number of P structures inside that slice. It fully hooks up their LRQs, their memory allocation blocks `mcache`, and their local GC tracking metadata.
+
+Once `procresize()` finishes during startup, the number of P structures is locked down. They are recycled, detached, and re-attached continuously, but no new Ps will ever be created or destroyed for the remainder of your app's lifespan.
+
+### Lifespan Phase
+
+Unlike the rigid allocation of Ps, Ms are spawned adaptively. The Go runtime creates an M under 4 circumstances.
+
+**A. Bootstrap `mcommoninit`**
+
+During the same startup phase where Ps are being built, the Go runtime spawns M0 (the absolute first OS thread) to handle the bootstrap loop. M0 captures P0, creates the first goroutine which wraps your `main.main` func, and kicks off the execution pipeline.
+
+**B. The syscall hand-off trigger**
+
+As the app runs, if a goroutine executes a blocking OS call, the thread M1 holding that goroutine freezes.
+- P1 unlinks from M1 to save its remaining 250 local goroutines.
+- The scheduler looks at the system's global idle thread pool `pidle`. If there are no idle Ms available to take over P1, the runtime instantly calls the host OS's kernel API (like `pthread_create` on Linux) to spawn a brand new physical thread M2 to keep the queue moving.
+
+**C. Work spawning (`newobject` / `wakehandler`)**
+
+Whenever your code spawns a new goroutine using the `go` keyword, the runtime adds the new G to a run queue. If there are idle P contexts sitting around but not enough active threads to cover them, the runtime immediately wakes up or allocates a new M to pair with the idle P and start chewing through the newly added task backlog.
+
+**D. The sysmon safety net**
+
+Go runs a background system monitor thread `sysmon` that operates outside the P constraint. Every few milliseconds, `sysmon` audits the app cluster. If it notices that a P has been stranded or neglected because its corresponding threads are trpped or deadlocked, `sysmon` will invoke a runtime call to forge a fresh M and forcefully attach it to the abandoned P.
+
+### Production Summary Matrix
+
+| Runtime Layer | Allocation Point | Allocation Frequency | Bound By |
+| P (logical processor) | App Initialization, inside `schedinit` / `procresize` before `main()` executes. | Static & fixed. Created exactly once. | Capped strictly by `GOMAXPROCS`. |
+| M (OS thread) | Dynamic & Adaptive. Spawned whenever a P is orphaned by a blocking syscall or work surges. | Variable. Created on-demand as workloads shift. | Capped by a default maximum safety ceiling of 10 000 threads. |
+
 ## 8. What is `m0`, and what is its purpose?
 
+`m0` is the absolute 1st thread created when a Go program boots up. It's a unique, statically allocated OS thread.
+While ordinary Ms are allocated dynamically on the heap as your app runs, `m0`'s memory is built into the program's compiled binary data section.
+
+### Purpose: Bootstraping the world
+
+When you execute a compiled Go binary, the OS kernel reads the file, sets up a raw process, and hads control over to the Go runtime's assembly entry point.
+At this point, the Go runtime's complex features do not exist yet. There is no memory allocator, no GC, and no scheduler. An ordinary M cannot be created because the heap allocator isn't running yet to give it memory.
+
+### `m0` Startup Timeline
+
+When your program launches, `m0` performs a strict chronoligical sequence of tasks to build the env:
+1. `mcommoninit`: `m0` initialzes itself and links into the global runtime tracker.
+2. `schedinit`: `m0` calls the core scheduler initialization. It counts your CPU cores, sets `GOMAXPROCS`, and creates the fixed array of Ps.
+3. capture `P0`: `m0` binds itself to the very first `P0`.
+4. create the runtime goroutine `g0`: `m0` initializes a special coordination goroutine called `g0` (which owns a massive, fixed stack used exclusively for scheduling logic rather than user code).
+5. spawn `main`: using `g0`, `m0` creates the first official user goroutine that wraps your actual `main.main()` func.
+6. start the engine: `m0` begins executing the scheduler loop, which picks up the `main` goroutine and brings your app to life.
+
+### After startup
+
+Once the startup phase is complete, `m0` loses its special status and becomes just another regular thread in the GMP scheduler pool.
+It's not destroyed, and it doesn't stay trapped running only the main thread, It behaves exactly like other M.
+
+
 ## 9. What is `g0`, and what is it used for?
+
+`g0` represents the runtime system stack for an M. While regular goroutines run the app code on a highly dynamic, resizable stack (starting at 2 KB), `g0` runs the runtime's internal C-like management code on a massive, fixed-size stack (typically 8-32 KB depending on the architecture).
+Any internal task that requires deep stability, cannot risk stack growth overhead, or must happen outside the context of a user task, runs on the `g0` stack.
+
+### 4 non-scheduling jobs of `g0`
+
+Whenever an M needs to drop out of your user app space to perform infra management, it switches its stack pointer to `g0`. This happens across 4 critical subsystems:
+
+**A. Memory allocation `mallocgc`**
+
+When your user code allocates memory, e.g. creating a massive slice or a new struct, the runtime checks if it can fit into the thread's local cache. 
+If it needs to talk to the central memory pools (`mcentral` or `mheap`) to request fresh virtual memory blocks (mspans), it switches to `g0`.
+Because allocating memory can require deep, complex system calculations. If the runtime tried to compute this on a regular user stack, it might run out of space and trigger a stack split, which would require more memory allocation, causing an infinite runtime loop panic.
+
+**B. GC Phases**
+
+While Go uses a concurrent garbage collector, certain operations, e.g. turning on the concurrent write barriers, sweeping dead spans, or running the brief stop-the-world (STW) synchronization checkpoints, are executed on the `g0` stack.
+
+**C. Goroutine creation `newproc`**
+
+When you type `go doWork()`, the current user goroutine doesn't actually build the new goroutine object. Instead, the thread switches to `g0`. 
+The `g0` stack allocates the new `g` structure, provisions its initial 2 KB stack, and appends it to the P's run queue.
+
+**D. Stack growth * shrinking `morestack`**
+
+Go user stacks are dynamically resized. When a user goroutine runs out of space, it triggers a special guard instruction that calls `morestack`.
+- The thread instantly switches to `g0`.
+- The `g0` stack allocates a new chunk of memory that is **double the size** of the old stack.
+- `g0` copies all the old stack frames into the new space, updates the internal pointers, and switches back to the user goroutine.
+
+### How the thread switches to `g0`
+
+Every M has exactly one unique `g0` goroutine created for it automatically when the thread is born.
+When your app is executing normally, the CPU's stack pointer register is looking at your user goroutine stack. The moment a context switch, memory allocation, or syscall occurs, the runtime invokes an assembly routine called `gogo` or `mcall`.
+
+```
+USER EXECUTION                       SYSTEM PLUMBING
+┌────────────────┐  runtime.mcall()  ┌────────────────┐
+│ User Goroutine │ ────────────────> │    g0 Stack    │
+│  (2KB Stack)   : <──────────────── :  (Fixed 8KB+)  │
+└────────────────┘   runtime.gogo()  └────────────────┘
+```
+
+- `mcall(fn)`: Saves the CPU registers of the current user goroutine into its `g.sched` strucutre. It then changes the CPU's stack pointer register to look at the `g0` stack memory area and executes the runtime function `fn`.
+- `gogo(g)`: The exact reverse. Once the runtime stack (e.g. finding a new runnable goroutine) is complete, `g0` calls `gogo`, which reloads a user goroutine's saved registers back into the CPU and shifts the stack pointer back to the user stack.
+
+### User `g` vs. `g0`
+
+| Attribute | User Goroutine `g` | System Goroutine `g0` |
+| --- | --- | --- |
+| Stack Type | Dynamic. Grows and shrinks at runtime. | Fixed. Explicitly bound size (8 KB or more). |
+| Allocation Site | Dynamic heap allocation. | Allocated inside the M's thread descriptor. |
+| Code Allowed | Any user app business logic. | Strictly un-preemptible runtime management code. |
+| Quanity | Can scale to millions of active nodes. | Strictly one per physical OS thread (M). |
 
 ## 10. How does the Go runtime switch between the `g0` stack and a user goroutine's stack?
