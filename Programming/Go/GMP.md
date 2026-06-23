@@ -150,7 +150,7 @@ The thread (M) detaches from its P, returns the P to the idle processor pool `pi
 ## 6. Can the P layer be removed from the GMP model? What would happen if it were?
 
 It's theoretically possible to remove the P layer, because early version of Go (before 1.1) didn't have it. The runtime used a simple GM model where goroutines were mapped directly to OS threads.
-However, removing the P layer would destroy Go's ability to scale to millions of concurrent requests. 
+However, removing the P layer would destroy Go's ability to scale to millions of concurrent requests.
 
 ### Historical GM
 
@@ -256,7 +256,7 @@ Whenever an M needs to drop out of your user app space to perform infra manageme
 
 **A. Memory allocation `mallocgc`**
 
-When your user code allocates memory, e.g. creating a massive slice or a new struct, the runtime checks if it can fit into the thread's local cache. 
+When your user code allocates memory, e.g. creating a massive slice or a new struct, the runtime checks if it can fit into the thread's local cache.
 If it needs to talk to the central memory pools (`mcentral` or `mheap`) to request fresh virtual memory blocks (mspans), it switches to `g0`.
 Because allocating memory can require deep, complex system calculations. If the runtime tried to compute this on a regular user stack, it might run out of space and trigger a stack split, which would require more memory allocation, causing an infinite runtime loop panic.
 
@@ -266,7 +266,7 @@ While Go uses a concurrent garbage collector, certain operations, e.g. turning o
 
 **C. Goroutine creation `newproc`**
 
-When you type `go doWork()`, the current user goroutine doesn't actually build the new goroutine object. Instead, the thread switches to `g0`. 
+When you type `go doWork()`, the current user goroutine doesn't actually build the new goroutine object. Instead, the thread switches to `g0`.
 The `g0` stack allocates the new `g` structure, provisions its initial 2 KB stack, and appends it to the P's run queue.
 
 **D. Stack growth * shrinking `morestack`**
@@ -302,3 +302,5 @@ USER EXECUTION                       SYSTEM PLUMBING
 | Quanity | Can scale to millions of active nodes. | Strictly one per physical OS thread (M). |
 
 ## 10. How does the Go runtime switch between the `g0` stack and a user goroutine's stack?
+
+See above.
