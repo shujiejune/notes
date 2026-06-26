@@ -1,6 +1,6 @@
 # Sync
 
-### 1. How to safely read or write shared variables other than mutex?
+## 1. How to safely read or write shared variables other than mutex?
 
 3 primary alters to standard mutex locks:
 - atomic operations: For primitive data types, the highest-performance alter is `sync/atomic` package. Instead of locking an entire code block at the software level, atomic operations hook directly into low-level CPU hardware instructions.
@@ -88,7 +88,7 @@ func (c *SecurityCache) SetToken(user, token string) {
 ```
 In many backend microservices, data caches are read thousands of times per second but only updated once every few minutes. A standard `sync.Mutex` forces all those parallel read requests to line up sequentially, causing severe latency degradation. An `RWMutex` allows thousands of readers to inspect the map simultaneously without blocking each other, onlu locking up execution when an active write occurs.
 
-### 2. How does Go implement atomic operations?
+## 2. How does Go implement atomic operations?
 
 `sync/atomic` package is implemented as a direct partnership between the Go compiler and optimized CPU assembly language.
 When you invoke an operation like `atomic.AddInt64()`, Go bypasses the software-level OS thread scheduler and executes lock-free hardware primitive instructions.
@@ -124,7 +124,7 @@ type HighThroughputMetrics struct {
 }
 ```
 
-### 3. What are the differences between atomic operation and lock?
+## 3. What are the differences between atomic operation and lock?
 
 Locks are a software-level coordination framework managed by the go runtime, whereas Atomics are hardware-level instructions executed directly by the CPU.
 
@@ -145,7 +145,7 @@ Atomic operation (`sync/atomic`): when a goroutine executes an atomic instructio
 - The operation is dispatched to the CPU core as a single, indivisible hardware instruction.
 - The CPU handles the synchronization using local cache lines. The goroutine executes the modification and moves to the next line of code without interruption.
 
-### 4. How is `sync.Mutex` implemented under the hood?
+## 4. How is `sync.Mutex` implemented under the hood?
 
 A `sync.Mutex` consists of 2 fields.
 ```go
@@ -173,7 +173,7 @@ if atomic.CompareAndSwapInt32(&m.state, 0, mutexLocked) {
 - active CPU spinning: If the fast path fails because another goroutine holds the lock, Go does not immediately put the current goroutine to sleep. Instead, if the runtime notices that the holder of the lock is currently running on another CPU core and the local queue isn't overloaded, it triggers active spinning. The goroutine executes a series oflow-level CPU yield instructions (`PAUSE` or `procyield`) for up to a few dozen cycles, hoping the lock holder will release it within microseconds.
 - the slow path (parking via semaphore): If active spinning cycles exhaust and the lock is still held, the goroutine must yield. It increments the waiter count bits (bits 3-31) inside `m.state`. Then it invokes `runtime_SemacquireMutex(&m.sema)`, parking the goroutine into a `_Gwaiting` sleep state. The scheduler unlinks it from the OS thread, allowing other workloads to run.
 
-### 5. What are the modes of mutex?
+## 5. What are the modes of mutex?
 
 To balance maximum app throughput with worst-case latency mitigation, Go implements a hybrid fairness engine with 2 operation configs.
 - Normal mode (throughput-optimized): waiting goroutines are stored inside a FIFO queue in the semaphore block. However, when a sleeping waiter is woken up, it does not automatically own the lock. It is forced to compete with newly arriving goroutines that are hitting the lock at that exact microsecond. New goroutines have a massive advantage: they are already running on the CPU core, whereas the woken-up waiter is still context switching back from sleep.
@@ -182,7 +182,7 @@ To balance maximum app throughput with worst-case latency mitigation, Go impleme
   - When the current holder executes `Unlock()`, it executes a direct handoff: it transfers ownership of the lock to the `sudog` sitting at the front of the waiter queue.
   -  The mutex stays locked down in starvation mode until the waiter queue drains, or an incoming waiter (head of the waiter queue) reports it has been in queue for less than 1 ms, at which point it shifts back to normal mode.
 
-### 6. Would a spnning goroutine on a mutex consume a lot of resources?
+## 6. Would a spnning goroutine on a mutex consume a lot of resources?
 
 Yes, active spinning inside a mutex consumes a high amount of CPU resources.
 When a goroutine spins, it doesn't just sit idle. It runs what is called a busy-wait loop. It stays actively pinned to a CPU core, consuming 100% of that core's computational capacity or the duration of the spin.
@@ -206,7 +206,7 @@ When a goroutine cannot spin and is forced to park:
 The cost of spinning: ~30-120 CPU cycles
 The cost of parking/waking up: 2000+ CPU cycles
 
-### 7. Say a mutex is locked by a goroutine, other goroutine have to keep waiting. After this mutex is released, which one among the waiting goroutines can acquire this mutex?
+## 7. Say a mutex is locked by a goroutine, other goroutine have to keep waiting. After this mutex is released, which one among the waiting goroutines can acquire this mutex?
 
 Normal mode: when `Unlock()` is called:
 - The releasing goroutine looks at the head of the FIFO semaphore queue and wakes up the goroutine that has been waiting the longest (the woken waiter).
@@ -220,7 +220,7 @@ Starvation mode: if a parked goroutine gets stuck at the front of the queue and 
 - The lock is transferred directly and exclusively to the woken waiter sitting at the head of the FIFO queue.
 - The longest-waiting goroutine at the head of the queue is guaranteed to win. No competition is allowed.
 
-### 8. What's the underlying implementation and use cases of `sync.Once`?
+## 8. What's the underlying implementation and use cases of `sync.Once`?
 
 A `sync.Once` object is composed of 2 fields totaling 8 bytes:
 ```go
@@ -268,7 +268,7 @@ If `done == 0`, multiple competing goroutines might hit the lock at the exact sa
 
 When goroutine B is finally woken up and enters `doSlow`, it secures the mutex. If the second check `if o.done == 0` did not exist, goroutine B would blindly execute `f()` a second time, defeating the purpose of `sync.Once`.
 
-#### Use Cases
+### Use Cases
 **A. Thread-safe lazy initialization (singleton pattern)**
 
 Instead of forcing the microservice to connect to externel databases or load heavy JSON config files into memory at startup, you can defer initialization until the very first API request arrives.
@@ -306,11 +306,11 @@ func (wp *WorkerPool) Close() {
 }
 ```
 
-#### Traps
+### Traps
 1. Never call `once.Do` recursively inside itself, this will cause a deadlock. The outer block holds the mutex and the inner block waits for it forever.
 2. If your initialization function `f()` panics or encounters a db network error, `sync.Once` still considers it completed. It will flip `done` to 1. Subsequent calls will return instantly, leaving your system running with a permanently broken, half-baked nil resource instance. If initialization can fail, you should handle retries manually using an `RWMutex` instead.
 
-### 9. How does `WaitGroup` enable goroutine waiting?
+## 9. How does `WaitGroup` enable goroutine waiting?
 
 `sync.WaitGroup` acts as a structural concurrent counter. It allows a main orchestrator goroutine to pause and wait until a collection of background worker goroutines finishes executing.
 ```go
@@ -330,7 +330,7 @@ Orchestrator: the goroutine whose job is to manage the lifecycle of other gorout
 - pauses its own execution until all its spawned workers complete their tasks.
 In 99% of Go apps, the `main()` goroutine acts as the primary orchestrator.
 
-#### Mechanics of the 3 primitives
+### Mechanics of the 3 primitives
 - registering work `wg.Add(delta)`: When you call `wg.Add(1)`, Go performs an atomic hardware-level addtion `atomic.AddUint64` to shift the high 32 bits of the state counter upward. If the worker counter climbs above 0, nothing happens, the gate remains open. If your code passes a negative number or miscounts, causing the high 32 bits to drop below zero, the runtime instantly triggers an uncoverable crash: `panic: sync: negative WaitGroup counter`.
 - parking the orchestrator `wg.Wait()`: When the main routine reaches `wg.Wait()`, it executes an atomic read of the state.
   - If the worker counter (high 32 bits) is already 0, it means all workers finished before `Wait()` was even reached. The function returns instantly without blocking.
@@ -405,7 +405,7 @@ Timeline T2: Worker 2 finishes
 - This instruction signals the Go scheduler: Find the orchestrator goroutine inside the `state2` semaphore pool and change its status back to `_Grunning`.
 - The scheduler schedules the orchestrator back onto an open CPU core. The orchestrator picks up exactly where it left off, passing past the `wg.Wait()` line to execute the final `fmt.Println`.
 
-#### Production Architecture Traps
+### Production Architecture Traps
 **A. The anti-pattern of passing by value**
 A `sync.WaitGroup` must never be passed into a function by value: `func worker(wg sync.WaitGroup)`.
 Doing so causes Go to create a shallow memory copy of the entire struct header. When the worker calls `wg.Done()`, it decrements the counter on its local copy on the stack. The original `WaitGroup` inside the main function never receives the signal, causing `wg.Wait()` to freeze and deadlock the app permanently.
@@ -425,13 +425,13 @@ wg.Wait()
 ```
 If the parent loop executes quickly, it might hit `wg.Wait()` while the worker counter is still 0 because the OS scheduler hasn't initialized the background threads yet. `wg.Wait()` will pass instantly, and the main routine will exit before a single background job runs.
 
-### 10. Explain the underlying mechanism of `sync.Map`.
+## 10. Explain the underlying mechanism of `sync.Map`.
 
 A standard Go `map` is unsafe for concurrent use. If multiple goroutines attempt to r/w to the same map simultaneously, the runtime will crash with panic: `concurrent map read and map write`.
 While you can wrap it in a `sync.Mutex`, high-frequency backend services can suffer severe latency under heavy read because every read request is forced to queue up behind the lock.
 To solve this, Go provides `sync.Map`, a specialized, thread-safe map achieving near-lock-free O(1) read via 2 map layers and a double-checked r/w splitting architecture.
 
-#### struct
+### struct
 
 ```go
 // src/sync/map.go
@@ -443,7 +443,7 @@ type Map struct {
 }
 ```
 
-#### 2 internal maps
+### 2 internal maps
 
 **Map A: `read` (fast path)**
 
@@ -453,7 +453,7 @@ This map is read-only and wrapped in an `atomic.Value`. Because its contents nev
 
 This is a standard, mutable Go map. Every time you insert a brand new key-value pair via `Store()`, it gets written directly into this map. Accessing or mutating the `dirty` map requires acquiring the companion `sync.Mutex` (`mu`).
 
-#### 3 main operations
+### 3 main operations
 
 **A. Read Flow (`Load`)**
 
@@ -476,7 +476,7 @@ Deleting an item via `m.Delete("key")` also avoids instant locking when possible
 - If the key sits in the `read` map, Go doesn't delete the entry. Instead, it uses an atomic operation to set the value pointer to `nil` or `expunged`.
 - The key container shell stays in the map, but it points to nothing. The physical memory cleanup is deferred until the next time the map undergoes a promotion cycle, minimizing inline latency.
 
-### 11. What's the relationship between `read` map and `dirty` map?
+## 11. What's the relationship between `read` map and `dirty` map?
 
 It's a classic **master-replica** architecture optimized for high-speed read operations.
 They are 2 separate pointer indexes that point to the exact same underlying values on the heap.
@@ -494,7 +494,7 @@ They are 2 separate pointer indexes that point to the exact same underlying valu
     - It loops through `read` and copies all active key pointers back into the new `dirty`.
     - If any keys in the `read`were deleted by your code earlier, their pointers were marked as `expunged`. During the reconstruction loop, Go skips those `expunged` keys, effectively purging them from memory so they don't leak into the new `dirty` map.
 
-### 12. Why do we need both `nil` and `expunged` for deleted?
+## 12. Why do we need both `nil` and `expunged` for deleted?
 
 **3 states of an entry's value pointer `entry.p`**
 - `valid`: Points to a real heap object. The key is alive and active.
@@ -523,7 +523,7 @@ Now, when a goroutine tries to un-delete that key, it sees `p == expunged`, and 
 The fast path aborts. Go acquires the mutex lock, writes the key into `dirty` explicitly, changes `p` from `expunged` to 100 inside `read`, and unlocks.
 Data consistency is preserved perfectly.
 
-### 13. What are the use cases of `sync.Map`?
+## 13. What are the use cases of `sync.Map`?
 
 `sync.Map` is not a general-purpose replacement for a standard map + mutex. If used in the wrong architecture layout, it can run slower than a standard locked map.
 

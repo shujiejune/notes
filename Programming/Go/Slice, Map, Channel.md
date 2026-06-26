@@ -1,10 +1,6 @@
----
-type: Note
----
-
 # Slice, Map, Channel
 
-### 1. What's the internal structure of Slice?
+## 1. What's the internal structure of Slice?
 
 It's a lightweight **runtime descriptor** (often called a slice header) that wraps around a separate, underlying contiguous block of emmory known as the backing array.
 ```go
@@ -16,7 +12,7 @@ type slice struct {
 ```
 On a standard 64-bit architecture, integers and pointers each consume 8 bytes, the slice header always occupies 24 bytes.
 
-### 2. How does Slice resize?
+## 2. How does Slice resize?
 
 When `append()` triggers on a slice whose `len == cap`:
 - new allocation: Go runtime intercepts the execution and allocates a completely new, larger backing array elsewhere on the heap.
@@ -28,7 +24,7 @@ if the current capacity is less than 256, the new capacity doubles;
 if the current capacity is greater than 256, it transitions into a moother methematical grow curve:
 $\rm{new\_cap} = \rm{old\_cap} + \frac{\rm{old\_cap} + 3\times 256}{4}$
 
-### 3. If cut out a new slice from an existing slice, will the original slice be altered by altering the new slice?
+## 3. If cut out a new slice from an existing slice, will the original slice be altered by altering the new slice?
 
 When you slice an existing slice or array, Go doesn't copy any underlying data.
 Instead, it generates a brand new 24-byte slice header that references the same backing array memory block.
@@ -36,12 +32,12 @@ Instead, it generates a brand new 24-byte slice header that references the same 
 - the length is recalculated to match the requested element range window
 - the capacity is computed as the total distance from teh slice's starting element pointer to the absolute end of the underlying backing array
 
-### 4. If pass a slice as an argument to a function, will the original slice be altered?
+## 4. If pass a slice as an argument to a function, will the original slice be altered?
 
 If you update an index that already exists within the slice's boundary, the original slice will be altered.
 If you add new elements to the slice using `append()`, the original slice will not show the new elements.
 
-### 5. What's the internal structure of Map in Go?
+## 5. What's the internal structure of Map in Go?
 
 The top-level controller of a Map is the `hmap` struct, holding the core metadata:
 ```go
@@ -77,13 +73,13 @@ How to look up a value using `val := m[key]`:
 - fast matching via `tophash`: the runtime extracts the high-order 8 bits of the hash (tophash), loops through the bucket's tophash array. If a tophash byte matches, it jumps to the corresponding index in the keys array to perform a strict type equality check (`key == targetKey`).
 - overflow traversal: if the key isn't found among the 8 slots and the overflow pointer is not `nil`, the runtime follows the pointer to the next linked overflow bucket and repeats the slot inspection.
 
-### 6. Is the iteration of Map ordered or unordered?
+## 6. Is the iteration of Map ordered or unordered?
 
 It's unordered.
 Go maps resize dynamically, elements are gradually moved from old buckets to new, re-indexed buckets.
 Go runtime explicitly introduces random entropy every time you start a `for range` loop. Go picks a random starting bucket and a random slot index within that buckets to begin the loop.
 
-### 7. How to read entries from a Map in order?
+## 7. How to read entries from a Map in order?
 
 Go doesn't have a native `LinkedHashMap` or `TreeMap`.
 ```go
@@ -141,11 +137,11 @@ sort.Slice(entries, func(i, j int) bool {
 })
 ```
 
-### 8. Do the keys in a Map have to be comparable? Why?
+## 8. Do the keys in a Map have to be comparable? Why?
 
 Yes, because you need to compare the hashcode of a key with the tophash of a bucket to decide which bucket the key should go to.
 
-### 9. How does Map resize?
+## 9. How does Map resize?
 
 Go triggers resize based on 2 specific thresholds:
 - overcrowding (load factor threshold): if the average load factor $\frac{elements}{buckets}$ exceeds 6.5, the map is getting too full. Go allocates a new bucket array that is double the size ($2^{B+1}$).
@@ -156,7 +152,7 @@ Go handles resizing incrementally via Evacuation.
 - every time your code executes a subsequent map assignment or map deletion, the runtime evacuates exactly 1~2 buckets from the old array into the new array.
 - any lookups that occur during this transition phase will seamlessly read from both the old and new arrays depending on whether that specific bucket has been evacuated (`hmap.nevacuate` tracks progress).
 
-### 10. Can we get the address of a key or value in a Map?
+## 10. Can we get the address of a key or value in a Map?
 
 No, a Go map is a dynamic hash table.
 During a resize, Go allocates a new bucket array and performs an incremental evacuation:
@@ -169,7 +165,7 @@ If you need to pass pointers to structural data inside maps to avoid copying ove
 - store pointers as the map values, `map[string]*Struct`, as the map value is a 64-bit integer pointing to an independent block on the heap.
 - extract, modify, re-insert. read the value out into a local stack copy, modify it, and write the entire object back into the map slot.
 
-### 11. If we delete a key from a Map, will its memory address be released?
+## 11. If we delete a key from a Map, will its memory address be released?
 
 No. While Go will clear out the data (the key and the value) inside that specific slot to prevent a memory leak of the objects themselves, the structure of the bucket and any attached overflow buckets remain permanently pinned in memory.
 When you call `delete(myMap, "key")`, Go runtime locates the bucket and slot where the key lives. It then zeroes out that slot in the `keys` and `values` arrays and set its corresponding `tophash` byte to an empty marker `emptyRest` or `emptyOne`.
@@ -177,11 +173,11 @@ Reasons:
 - contiguous array constraint: Since the primary buckets are allocated as a single, uniform array block to optimize CPU cache performance, Go cannot simply de-allocate a single bucket from the middle of an array.
 - performance trade-off: checking if an entire bucket chain is empty and constantly re-adjusting or shrinking the main hash table array during deletions would cause massive CPU thrashing, destroying the $\rm O(1)$ performance.
 
-### 12. Can we delete elements from a Map during iteration?
+## 12. Can we delete elements from a Map during iteration?
 
 Yes. Go runtime just locates that key-value slot and zeroes out its bytes. The memory block of the bucket doesn't shrink.
 
-### 13. What is CSP?
+## 13. What is CSP?
 
 CSP is communicating sequential processes, a formal mathematical model for describing patterns of interaction in concurrent systems.
 Before CSP, concurrent programming relied on **shared memory**. Multiple execution paths access the same variablesin RAM simultaneously. To prevent data corruption, devs manage complex locking systems, e.g. `sync.Mutex`, semaphores.
@@ -234,7 +230,7 @@ func main() {
 - it acts like a direct, synchronous handoff.
 `close(ch)`: shut down the channel. you can still read remaining data from a closed buffered channel, but sending to it or closing it again will trigger a runtime panic.
 
-### 14. What's the underlying implementation of Channel?
+## 14. What's the underlying implementation of Channel?
 
 When you pass a channel variable around, you are passing a pointer to a `hchan` struct. 3 core components:
 - ring buffer
@@ -264,7 +260,7 @@ type hchan struct {
 }
 ```
 
-### 15. What's the flow of sending data to a channel?
+## 15. What's the flow of sending data to a channel?
 
 Scenarios:
 - Sending to a channel with a waiting receiver: if a goroutine $G_{send}$ writes to an empty channel where a receiving goroutine $g_{recv}$ is already blocked inside `recvq`
@@ -284,7 +280,7 @@ Scenarios:
   - parking the goroutine: it calls `gopark()`. this instructs the Go runtime scheduler to detach the current goroutine from its active OS thread, shifting its state from `_Grunning` to `_Gwaiting`.
   - the channel unlocks itself inside the parking routine. the underlying OS thread remains wide awake, instantly grabbing a different, runnable goroutine from the scheduling queue to keep the CPU core busy.
 
-### 16. What's the flow of reading data to a channel?
+## 16. What's the flow of reading data to a channel?
 
 Boundary and sanity checks:
 - handling a `nil` channel: if the channel variable hasn't been initialized (`var ch chan int`), attempting to read from it will block the goroutine forever.
@@ -317,12 +313,12 @@ Scenarios:
   - the underlying OS thread remains fully active. Go scheduler immediately searches its local run queues to find a different, runnable goroutine to execute on that thread.
   - wakeup: hours or microseconds later, when a sender eventually writes data to the channel, it will find this $G_{recv}$ waiting in `recvq`, copy the data directly into this variable, and wake this goroutine back up via `goready()`. the goroutine will resume execution after its original blocking line.
 
-### 17. Can we read data from a closed channel?
+## 17. Can we read data from a closed channel?
 
 If there is still data in the buffer, the channel allows $G_{recv}$ to drain all remaining elements sequentially until `qcount == 0`.
 If the channel buffer is empty, $G_{recv}$ will never block. It instantly bypasses the queues, returns the zero-value of the channel's data type (e.g. 0 for an int, `""` for a string), and returns a `false` flag if the code was written using the comma-ok idiom (`val, ok := ←ch`).
 
-### 18. In what kind of cases will a channel cause memory leak?
+## 18. In what kind of cases will a channel cause memory leak?
 
 Channels themselves are heap-allocated blocks of memory, they cannot leak memory on their own.
 Channel memory leaks are always caused by blocked goroutines that get permanently trapped waiting on a channel. Because a goroutine is a runtime object, if a goroutine blocks forever trying to send or receive from a channel, the GC is forced to keep that goroutine along with its entire stack memory allocation and any variables it references alive in memory forever.
@@ -401,7 +397,7 @@ How to detect channel memory leaks in production:
 - `runtime.NumGoroutine()`: Regularly log or export this metric to the Prometheus dashboard. If the app's active goroutine count forms a steady, continuous upward stairs pattern over a 24-hour period, there is a channel leak.
 - pprof goroutine stack dumps: Trigger a local profile endpoint (`/debug/pprof/goroutine?debug=2`). Search the stack dump file or goroutines sitting in a state like `chan receive` or `chan send` under code locations that should have already terminated.
 
-### 19. Can closing a channel cause exceptions?
+## 19. Can closing a channel cause exceptions?
 
 Yes.
 3 cases:
@@ -468,15 +464,15 @@ func (sc *SafeChannel) SafeClose() {
 }
 ```
 
-### 20. What if we write data into a closed channel?
+## 20. What if we write data into a closed channel?
 
 We will get a `panic: send on closed channel`.
 
-### 21. What is `select`?
+## 21. What is `select`?
 
 `select` is a specialized `switch` statement exclusively for Go channels.
 
-### 22. What's the execution mechanism of `select`?
+## 22. What's the execution mechanism of `select`?
 
 Instead of executing sequentially from top to bottom, a `select` block pauses execution until at least one of its channel cases becomes ready to send or receive data, making it the primary routing engine for CSP-based architectures.
 
@@ -486,7 +482,7 @@ When a `select` block executes, it follows 3 runtime rules:
 - randomized selection: if multiple cases are ready at the exact same microsecond, Go doesn't prioritize the top case, it piakcs one case at random to execute.
   - if `select` evaluated cases sequentially from top to bottom, a highly active channel at case 1 would permanently starve case 2 and case 3 from executing.
 
-### 23. What's the underlying implementation of `select`?
+## 23. What's the underlying implementation of `select`?
 
 Under the hood, Go compiler translates a`select` block into a runtime function named `selectgo`. Go runtime represents the entire `select` block using a temporary management layout containing an array of case configuartions called `scase`.
 ```go
