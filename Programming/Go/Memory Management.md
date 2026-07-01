@@ -20,7 +20,7 @@ To minimize internal fragmentation (wasted space inside an allocated block), Go 
 **A. `mcache` (thread-local, lock-free)**
 
 Every logical processor (P) in the GMP model owns its own dedicated local storage cache called an `mcache`.
-When a goroutine running on a thread needs to allocate a small object (e.g. a 24-byte struct), it requests space from its assiged P's `mcache`.
+When a goroutine running on a thread needs to allocate a small object (e.g. a 24-byte struct), it requests space from its assigned P's `mcache`.
 Because the current thread has exclusive monopoly ownership over that P, the allocation happens lock-free, executing at near-instantaneous CPU speeds.
 
 **B. `mcentral` (the shared size pools)**
@@ -38,7 +38,7 @@ Accessing the `mheap` requires acquiring a heavy, global runtime mutex lock. If 
 
 When you allocate an object in Go, the runtime performs a micro-optimization check, bucketing the allocation into one of three execution categories based on its size.
 - tiny allocations (less than 16 bytes): For tiny objects that don't contain pointers (e.g. small integers or brief booleans), Go uses a sub-allocator called the tiny allocator. It takes multiple tiny objects and packs them tightly into a single 16-byte slot inside the `mcache`, preventing massive byte fragmentation on the heap.
-- small allocations (between 16 bytes and 32 KB): The object is rounded up to the hearest available size class. The runtime fetches an empty slot from the corresponding `mspan` inside the local `mcache` (or climbs up to `mcentral` if the local span is full).
+- small allocations (between 16 bytes and 32 KB): The object is rounded up to the nearest available size class. The runtime fetches an empty slot from the corresponding `mspan` inside the local `mcache` (or climbs up to `mcentral` if the local span is full).
 - larger allocations (greater than 32 KB): Objects larger than 32 KB are too massive to fit into pre-formatted size classes. They bypass the `mcache` and `mcentral` layers. The runtime talks directly to the global `mheap`, carving out a dedicated, custom-sized `mspan` composed of the exact number of 8 KB pages required to host that specific giant object.
 
 
@@ -61,8 +61,8 @@ func EscapeToHeap() *int {
 
 ## 2. What is memory escape in Go? Under what circumstances does memory escape occur?
 
-Memory escape (Escape Analysis) is a staic optimization phase executed by the Go compiler during the build process. Its job is to determine whether a var can be dafely allocated on the goroutine's fast local stack, or if it must escape to the global heap.
-Unlike C/C++ where the dev manually conrols allocation via `malloc` and `free`, and unlike Java where objects are almost universally dumped onto the heap, Go analyzes the source code to make the decision.
+Memory escape (Escape Analysis) is a static optimization phase executed by the Go compiler during the build process. Its job is to determine whether a var can be safely allocated on the goroutine's fast local stack, or if it must escape to the global heap.
+Unlike C/C++ where the dev manually controls allocation via `malloc` and `free`, and unlike Java where objects are almost universally dumped onto the heap, Go analyzes the source code to make the decision.
 
 ### Stack vs. Heap
 
@@ -125,12 +125,12 @@ func EscapeSize() {
 		// 1. Dynamic Escape: Size isn't known until runtime
 		dynamicSize := 10
 		sliceA := make([]int, dynamicSize) // <- ESCAPES!
-		
-		// 2. Volume Escape: Exceeds teh compiler's safe stack thresholds
+
+		// 2. Volume Escape: Exceeds the compiler's safe stack thresholds
 		sliceB := make([]int, 100000) // <- ESCAPES! (Too massive for the stack)
 }
 ```
-Even if a var never leaves its parent function, it will escape to the heap if it's too large for the stack, or if its size is unkown at compile time. Go stack frames are kept intentionally lean.
+Even if a var never leaves its parent function, it will escape to the heap if it's too large for the stack, or if its size is unknown at compile time. Go stack frames are kept intentionally lean.
 
 ### How to audit escapes: compiler tooling
 
@@ -151,7 +151,7 @@ The single most destructive consequence of memory escape is the pressure it puts
 
 As the volume of escaped objects on the heap grows, the GC must trigger more frequently to stay ahead of your app's allocation pacing. Because the GC runs concurrently alongside the business logic, it steals CPU cycles from your active goroutines. If the CPU cores are busy marking millions of escaped strings, JSON fragments, or structs, your app's core computational throughput drops significantly.
 
-### Tail-latency spikes (STW and mark assit traps)
+### Tail-latency spikes (STW and mark assist traps)
 
 Heavy memory escape can bypass Go's sub-millisecond GC latency guarantees and introduce devastating tail-latency (p99 / p99.9) spikes via 2 mechanisms.
 - GC mark assist: If a high-frequency goroutine is causing memory to escape to the heap faster than the background GC can scan it, the runtime will forcefully hijack that user goroutine. It enters a state called **mark assist**, freezing the business logic and forcing that specific goroutine to help scan the heap before it is allowed to continue its work. This turns a sub-microsecond API call into a multi-millisecond stall.
@@ -180,7 +180,7 @@ Modern CPUs are incredibly fast because they load data from slow system RAM into
 
 ### Production Summary Strategy
 
-To pretect the high-throughput systems from the consequences of memory escape, enforce these strict design boundaries:
+To protect the high-throughput systems from the consequences of memory escape, enforce these strict design boundaries:
 - Avoid `any` / interface parameters in tight, high-frequency execution loops, e.g. serialization or math transformations.
 - Return values instead of pointers for small, transient structs (< 64 bytes) to keep them on the stack.
 - Pre-allocate slices with a fixed size config (`make([]T, length, capacity)`) if the max volume is known at compile time.
@@ -217,13 +217,13 @@ When you create a context with a timeout or deadline using `context.WithTimeout(
 func QueryAPI() {
     // ❌ POTENTIAL LEAK
     ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Minute)
-    
+
     // If we return here early, the context remains active in memory!
     if err := doFastWork(ctx); err != nil {
-        return 
+        return
     }
-    
-    cancel() 
+
+    cancel()
 }
 ```
 
@@ -239,7 +239,7 @@ var GlobalLogData []byte
 func ReadHeader(hugePayload []byte) {
     // hugePayload is 50 Megabytes.
     // We only want the first 4 bytes.
-    GlobalLogData = hugePayload[:4] 
+    GlobalLogData = hugePayload[:4]
 }
 ```
 
@@ -263,7 +263,7 @@ func StartWorker() {
 
 The `NewTicker` constructor registers a reference onto the runtime's internal clock system. If a function or a worker completes its lifecycle but you omit `ticker.Stop()`, the channel tracking that ticker stays alive on the heap, leaking memory and wasting background CPU clock cycles.
 
-**5. Abondoned objects in global collections (maps & slices)**
+**5. Abandoned objects in global collections (maps & slices)**
 
 Because global vars serve as the absolute roots for GC reachability scans, storing objects inside a global cache map or slice without an explicit eviction or deletion strategy guarantees a memory leak.
 
@@ -287,7 +287,7 @@ The primary weapons for debugging memory leaks are `go tool pprof` for runtime p
 
 ### Step-by-Step Guide: Locating Runtime Memory Leaks
 
-The standard way to locate a memory leak in a running prod microservices is by ttacking heap allocations over time using the HTTP `pprof` endpoint.
+The standard way to locate a memory leak in a running prod microservices is by tracking heap allocations over time using the HTTP `pprof` endpoint.
 
 **A. Expose the profiling endpoints**
 
@@ -345,7 +345,7 @@ If your memory leak is caused by a blocked goroutine that cannot exit, it will t
 # Fetch a text trace of every single active goroutine stack trace
 curl http://localhost:6060/debug/pprof/goroutine?debug=1 > goroutines.txt
 ```
-Open `goroutines.txt` and look for anomalies. If you see thousands of goroutines blocked on the exact sam eexecution line (e.g. `chan send` or `mutex.Lock`), you have pinpointed a goroutine leak.
+Open `goroutines.txt` and look for anomalies. If you see thousands of goroutines blocked on the exact same execution line (e.g. `chan send` or `mutex.Lock`), you have pinpointed a goroutine leak.
 
 ### Blueprint Strategies for Optimizing Memory Leaks
 
@@ -357,10 +357,10 @@ If you slice a small snippet out of a massive array, string, or file buffer and 
 ```go
 // ❌ LEAKY: Retains the entire 50MB backing array
 func GetHeader(hugePayload []byte) []byte {
-    return hugePayload[:4] 
+    return hugePayload[:4]
 }
 
-//  OPTIMIZED: Allocates 4 bytes, allowing the 50MB array to be GC'd
+//  OPTIMIZED: Allocates 4 bytes, allowing the 50MB array to be GC's
 func GetHeaderOptimized(hugePayload []byte) []byte {
     header := make([]byte, 4)
     copy(header, hugePayload[:4])
@@ -370,7 +370,7 @@ func GetHeaderOptimized(hugePayload []byte) []byte {
 
 **B. Ensure context termination**
 
-Always call your context cancel functions using a `defer` immediately upon instantiation. 
+Always call your context cancel functions using a `defer` immediately upon instantiation.
 ```go
 // ❌ LEAKY: If an error occurs, the context timer persists for 5 minutes
 func Process() {
@@ -386,7 +386,7 @@ func ProcessOptimized() {
     ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
     defer cancel() // Guarantees cleanup when function returns
     if err := validate(); err != nil {
-        return 
+        return
     }
 }
 ```
@@ -406,7 +406,7 @@ func HandleRequest(data []byte) {
     buf := bufferPool.Get().(*bytes.Buffer)
     buf.Reset() // Reset buffer back to zero length
     defer bufferPool.Put(buf) // Recycle back to pool for next goroutine
-    
+
     buf.Write(data)
     // process data...
 }
