@@ -336,9 +336,9 @@ This balances memory consumption against CPU overhead by calculating an optimal 
 
 The trigger is governed by the `GOGC` environment variable (which defaults to 100). The number represents a percentage growth relative to the size of the live heap at the end of the previous GC cycle.
 The formula for the next trigger target is:
-```katex
+$$
 Next Trigger Target = Live Heap Size \times (1+\frac{GOGC}{100})
-```
+$$
 - If a GC cycle wraps up and determines that your app has exactly 50 MB of live, reachable data remaining, and `GOGC` is set to 100, the runtime sets the next execution trigger target to 100MB.
 - The moment your running goroutines allocate enough fresh objects onto heap `mspans` to push total consumption past that 100 MB marker, the runtime automatically wakes up the background GC workers.
 
