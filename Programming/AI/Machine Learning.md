@@ -14,15 +14,18 @@ Machine Learning: field of study that gives computer the ability to learn withou
 
 ## Supervised machine learning: regression and classification
 
+### Regression with Multiple Input Variables
+
 Cost Function:
 $$
 J(w, b) = \frac{1}{2m}\sum_{i=1}^{m}(\hat{y}^{(i)}-y^{(i)})^2
 $$
 where $m$ is the number of training examples.
+This formula calculates the squared error of predicted $\hat{y}$ values.
 
 The purpose of linear regression is to find the $w$ or $(w, b)$ to minimize $J(w)$ or $J(w, b)$.
 
-Gradient Descent Algorithm:
+**Gradient Descent Algorithm:**
 $$
 w = w - \alpha\frac{\partial J(w, b)}{\partial w} \\
 b = b - \alpha\frac{\partial J(w, b)}{\partial b}
@@ -42,7 +45,7 @@ $$
 This is multiple linear regression.
 
 Implement it in Python code (NumPy):
-```py
+```python
 w = np.array([1.0, 2.5, -3.3])
 b = 4
 x = np.array([10, 20, 30])
@@ -60,15 +63,35 @@ Vectorization is much faster because NumPy implements it in hardware, multiplyin
 
 For multiple linear regression, gradient descent formulae become:
 $$
-w_j = w_j - \alpha\frac{1}{m}\Sum_{i=1}^m(f_{\vec{w},b}(\vec{x}^{(i)}) - y^{(i)})x_j^{(i)}
-b = b - \alpha\frac{1}{m}\Sum_{i=1}^m(f_{\vec{w},b}(\vec{x}^{(i)}) - y^{(i)})
+w_j = w_j - \alpha\frac{1}{m}\sum_{i=1}^m(f_{\vec{w},b}(\vec{x}^{(i)}) - y^{(i)})x_j^{(i)}
+b = b - \alpha\frac{1}{m}\sum_{i=1}^m(f_{\vec{w},b}(\vec{x}^{(i)}) - y^{(i)})
 $$
+
+**Feature Scaling: Normalization**
+
+2 methods of feature scaling:
+- divide by maximum
+- [x] mean normalization
+
+Z-score normalization
+$$
+x_j = \frac{x_j - \mu_j}{sigma_j}
+$$
+where $\mu_j$ is the mean value, $sigma_j$ is the standard deviation.
+
+**An alternative to gradient descent: normal equation**
+
+It's only for linear regression, can solve $w, b$ without iterations.
+
+Cons:
+- doesn't generalize to other learning algorithms
+- slow when number of features is large (> 10,000)
 
 ### NumPy and Vectorization
 
 #### Data Creation
 
-```py
+```python
 # NumPy routines which allocate memory and fill arrays with value
 a = np.zeros(4);                print(f"np.zeros(4) :   a = {a}, a shape = {a.shape}, a data type = {a.dtype}")
 a = np.zeros((4,));             print(f"np.zeros(4,) :  a = {a}, a shape = {a.shape}, a data type = {a.dtype}")
@@ -83,7 +106,7 @@ Data creation routine in NumPy will have a first param which is the shape of the
 This can either be a single value for a 1-D result or a tuple (n, m, ...) specifying the shape of the result.
 
 There are some data creation routines that do not take a shape tuple.
-```py
+```python
 # NumPy routines which allocate memory and fill arrays with value but do not accept shape as input argument
 a = np.arange(4.);              print(f"np.arange(4.):     a = {a}, a shape = {a.shape}, a data type = {a.dtype}")
 a = np.random.rand(4);          print(f"np.random.rand(4): a = {a}, a shape = {a.shape}, a data type = {a.dtype}")
@@ -94,7 +117,7 @@ a = np.random.rand(4);          print(f"np.random.rand(4): a = {a}, a shape = {a
 ```
 
 Values can be specified manually as well.
-```py
+```python
 # NumPy routines which allocate memory and fill with user specified values
 a = np.array([5,4,3,2]);  print(f"np.array([5,4,3,2]):  a = {a},     a shape = {a.shape}, a data type = {a.dtype}")
 a = np.array([5.,4,3,2]); print(f"np.array([5.,4,3,2]): a = {a}, a shape = {a.shape}, a data type = {a.dtype}")
@@ -107,7 +130,7 @@ a = np.array([5.,4,3,2]); print(f"np.array([5.,4,3,2]): a = {a}, a shape = {a.sh
 #### Operations on Vectors
 
 **Index:** Referring to an element of an array by its position within the array.
-```py
+```python
 # vector indexing operations on 1-D vectors
 a = np.arange(10)
 print(a)
@@ -133,7 +156,7 @@ except Exception as e:
 
 **Slicing:** Getting a subset of elements from an array based on their indices.
 It creates an array of indices using a set of 3 values `start:stop:step`.
-```py
+```python
 # vector slicing operations
 a = np.arange(10)
 print(f"a         = {a}")
@@ -162,7 +185,7 @@ c = a[:];         print("a[:]     = ", c)
 
 **Single vector operations**
 
-```py
+```python
 a = np.array([1,2,3,4])
 print(f"a             : {a}")
 # a             : [1 2 3 4]
@@ -188,7 +211,7 @@ print(f"b = a**2      : {b}")
 
 **Vector element-wise operations**
 
-```py
+```python
 a = np.array([ 1, 2, 3, 4])
 b = np.array([-1,-2, 3, 4])
 print(f"Binary operators work element wise: {a + b}")
@@ -208,7 +231,7 @@ except Exception as e:
 
 **Vector dot product**
 
-```py
+```python
 # test 1-D
 a = np.array([1, 2, 3, 4])
 b = np.array([-1, 4, 3, 2])
@@ -223,7 +246,7 @@ print(f"NumPy 1-D np.dot(b, a) = {c}, np.dot(a, b).shape = {c.shape} ")
 #### Matrix Creation
 
 The same functions that created 1-D vectors will create n-D arrays.
-```py
+```python
 a = np.zeros((1, 5))
 print(f"a shape = {a.shape}, a = {a}")
 # a shape = (1, 5), a = [[0. 0. 0. 0. 0.]]
@@ -238,7 +261,7 @@ print(f"a shape = {a.shape}, a = {a}")
 ```
 
 One can also manually specify data.
-```py
+```python
 # NumPy routines which allocate memory and fill with user specified values
 a = np.array([[5], [4], [3]]);   print(f" a shape = {a.shape}, np.array: a = {a}")
 # a shape = (3, 1), np.array: a = [[5] [4] [3]]
@@ -253,7 +276,7 @@ print(f" a shape = {a.shape}, np.array: a = {a}")
 #### Matrix Operations
 
 **Indexing:** Matrices include a second index. The 2 indices describe `[row, column]`.
-```py
+```python
 # vector indexing operations on matrices
 a = np.arange(6).reshape(-1, 2)   # reshape is a convenient way to create matrices
 print(f"a.shape: {a.shape}, \na= {a}")
@@ -271,3 +294,64 @@ We can also create a same 2-D array using `.reshape(3, 2)`.
 The `-1` argument tells the routine to compute the number of rows given the size of the array and the number of columns.
 
 **Slicing:** `start:stop:step` can be applied to both rows and columns.
+
+## Classification with Logistic Regression
+
+**Sigmoid function (logistic function)**
+
+$$
+g(z) = \frac{1}{1+{\rm e}^{-z}}   0\lt g(z)\lt 1
+$$
+
+**Logistic regression** combines linear regression formula with sigmoid function:
+$$
+f_{\vec{w},b}(\vec{x}) = g(\vec{w}\cdot\vec{x} + b)
+$$
+
+How to interpret the logistic regression output:
+Take $f_{\vec{w},b}(\vec{x})$ as the probability of $y$ being equal to 1, given a certain input $\vec{x}$.
+We can use this notation:
+$$
+f_{\vec{w},b}(\vec{x}) = {\rm P}(y=1\mid\vec{x};\vec{w},b)
+$$
+It's the probability that $y = 1$, given input $\vec{x}$ and parameters $\vec{w}, b$.
+
+If you set the threshold to be 0.5:
+when $f_{\vec{w},b}(\vec{x}) \gt 0.5$, we have $\hat{y}=1$, otherwise $\hat{y}=0$.
+In this case, the threshold becomes:
+when $\vec{w}\cdot\vec{x} + b \geq 0$, $\hat{y}=1$;
+otherwise, $\hat{y}=0$.
+We call $\vec{w}\cdot\vec{x} + b = 0$ the **decision boundary**.
+
+The **decision boundary** can be non-linear (for polynomial cost function) and very complex.
+
+### Cost Function for Logistic Regression
+
+Since $y$ in logistic regression is either 0 or 1, the squared error cost function is non-convex.
+If you try to use gradient descent, there will be lots of local minima, therefor it's not suitable.
+
+We can change the squared error cost function a bit:
+$$
+J(\vec{w},b) = \frac{1}{m}\sum_{i=1}^m\frac{1}{2}(f_{\vec{w},b}(\vec{x}^{(i)}) - y^{(i)})^2  \\
+\Downarrow  \\
+J(\vec{w},b) = \frac{1}{m}\sum_{i=1}^m L(f_{\vec{w},b}(\vec{x}^{(i)}), y^{(i)})
+$$
+$L(f_{\vec{w},b}(\vec{x}^{(i)}), y^{(i)})$ is called **loss function**.
+Loss function measures how well you are doing on one training example.
+Cost function measures how well you are doing on the entire training set by summing up the losses on all of the training examples (and averaging them).
+
+The definition usually used for logistic loss function:
+$$
+L(f_{\vec{w},b}(\vec{x}^{(i)}), y^{(i)}) = \begin{cases} -\log(f_{\vec{w},b}(\vec{x}^{(i)})), & \text {if $y^{(i)}=1$} \\
+-\log(1-f_{\vec{w},b}(\vec{x}^{(i)})), & \text {if $y^{(i)}=0$} \end{cases}
+$$
+
+It can be simplified like this (equivalent):
+$$
+L(f_{\vec{w},b}(\vec{x}^{(i)}), y^{(i)}) = -y^{(i)}\log(f_{\vec{w},b}(\vec{x}^{(i)})) - (1-y^{(i)})\log(1-f_{\vec{w},b}(\vec{x}^{(i)}))
+$$
+Then the simplified cost function looks like:
+$$
+J(\vec{w},b)=-\frac{1}{m}\sum_{i=1}^m[y^{(i)}\log(f_{\vec{w},b}(\vec{x}^{(i)})) + (1-y^{(i)})\log(1-f_{\vec{w},b}(\vec{x}^{(i)}))]
+$$
+This particular cost function was derived using a statistical principle called **maximum likelihood estimation**.
