@@ -13,6 +13,7 @@ It's a lightweight thread of execution managed entirely by Go runtime, rather th
 - A goroutine starts with a small dynamic stack of only 2KB. It grows and shrinks in the heap as needed, so you can run lots of goroutines simultaneously on a small server.
 - Creating an OS thread requires a costly system call via the OS kernel. Goroutines are created and destroyed via the Go runtime user space, which is faster and cheaper.
 - Switching context between 2 goroutines involves saving only a few registers, making it faster than OS switching context between 2 threads.
+
 Go handles this massive scaling through a runtime scheduler GMP:
 - G (goroutine): goroutine itself, its stack, its current execution state
 - M (machine / OS thread): a physical OS thread created and managed by the kernel
@@ -41,7 +42,7 @@ func computeTask(id int) {
 func main() {
 	// Spawning 3 concurrent tasks using the 'go' keyword
 	for i := 1; i <= 3; i++ {
-		go computeTask(i) 
+		go computeTask(i)
 	}
 
 	// If we don't pause the main goroutine, the program will terminate
@@ -50,13 +51,21 @@ func main() {
 	fmt.Println("Main program exiting.")
 }
 ```
+When you execute the `go computeTask(i)` command lines inside the loop, the task does not run instantly.
+Instead, the Go scheduler performs the following steps:
+- It creates a new goroutine structure G.
+- It assigns the `computeTask` function pointer to that G.
+- It places that G onto the back of the current P's LRQ.
+This entire tracking process takes a fraction of a microsecond. The loop spins 3 times, dumps 3 G structures into the local queue, and then immediately hits the next line of code in `main()`.
+If the sleep line is deleted, the `main` goroutine finishes so rapidly that the underlying Ms never even get a chance to pop `G1`, `G2`, or `G3` off the queue and context-switch into them.
+This is a classic data race between the termination of the main goroutine and the scheduling of the worker goroutines, the output is non-deterministic.
 
 ## 3. What are the differences between goroutine, thread, and process?
 
 | Dimension | Process | Thread | Goroutine |
 | --- | --- | --- | --- |
 | Managed By | OS kernel | OS kernel | Go runtime scheduler |
-| Memory Allocation | dedicated address space (isolated) | shared heap within process; fixed 1-2 MB stack | shared heap within heap; dynamic 2 KB starting stack |
+| Memory Allocation | dedicated address space (isolated) | shared heap within process; fixed 1-2 MB stack | shared heap within process; dynamic 2 KB starting stack |
 | Creation/Switch Cost | extremely high, requires page table swaps | medium, requires kernel-space transition | extremely low, happens entirely in user space |
 | Communication Mechanism | IPC (sockets, pipes, shared memory) | shared memory with synchronization (mutexes) | channels (CSP model) or mutexes |
 | Scale Capacity | hundreds per machine | thousands per machine | hundreds of thousands per machine |
@@ -66,7 +75,7 @@ func main() {
 - resource ownership: OS allocates system resources, e.g. file descriptors, network ports, security contexts, memory, directly to the process.
 - overhead: creating, destroying, or context-switching between processes is expensive because the OS kernel must completely swap out memory page tables and hardware registers.
 
-**Thread:** the smallest unit of execution that an OS kernel can schedule. 
+**Thread:** the smallest unit of execution that an OS kernel can schedule.
 - shared memory: all threads within the same process share the process's virtual address space (heap, global vars, file descriptors). but each thread retains its own private stack to track function calls and local vars.
 - concurrency: because of shared memory, threads can communicate with each other fast. but this introduces risk of data races and requires sync primitives like mutexes and semaphores.
 - overhead: lighter than process, still heavy. it requires entering kernel space, and the fixed stack size of thread limits the number of concurrent threads.
@@ -94,7 +103,7 @@ fmt.Println(uPtr.Name)   // Output: "" (Zero value for string)
 fmt.Println(uPtr.Age)    // Output: 0  (Zero value for int)
 
 // Allocates and initializes a map descriptor with room for 10 elements
-m := make(map[string]int, 10) 
+m := make(map[string]int, 10)
 
 m["key"] = 100            // Perfectly valid!
 fmt.Printf("%T\n", m)    // Output: map[string]int (It's the actual value/header, not a pointer)
@@ -176,9 +185,6 @@ In Go 1.22+, `for range` always iterates over a copy of the elements, not the or
 So if we use `for _, p := range products`, the pointer `&p` is referencing transient loop structure. If those memory scopes clear or alter, we risk data bugs. It's better to use `for i := range products` and `&products[i]`.
 
 ## 7. How to concatenate strings efficiently?
-
-In Go 1.22+, `for range` always iterates over a copy of the elements, not the original elements. 
-So if we use `for _, p := range products`, the pointer `&p` is referencing transient loop structure. If those memory scopes clear or alter, we risk data bugs. It's better to use `for i := range products` and `&products[i]`.
 
 Under the hood, a Go string is a read-only slice of bytes. Every time you alter a string, Go cannot modify the existing memory block, it must allocate a brand new byte array on the heap and copy the old contents over.
 `string.Builder` maintains an internal mutable byte slice `[]byte` to accumulate the content. It allows you to pre-allocate memory. When you call `.String()`, it performs an unsafe pointer conversion to return the string without allocating a fresh copy of the backing array.
@@ -287,7 +293,7 @@ func main() {
 	runes := []rune(str)
 
 	fmt.Println(len(runes)) // Output: 4 (Correct! There are 4 distinct Unicode characters)
-	
+
 	// Now indexing works perfectly
 	fmt.Printf("%c\n", runes[2]) // Output: 世
 }
@@ -416,14 +422,14 @@ If there are multiple packages nested across dependencies, Go evalutes them in d
 
 ## 15. Can we compare 2 interfaces?
 
-Yes, we can compare 2 interfaces using `==` and `!=`. 
+Yes, we can compare 2 interfaces using `==` and `!=`.
 An interface is represented as a 2-word data structure containing 2 pointers:
 - dynamic type (`_type` or `tab`): a pointer to the metadata describing the underlying concrete type
 - dynamic value: (`data`): a pointer to the actual concrete value or data instance assigned to it
 
 2 interfaces are considered equal **if and only if** their dynamic types are identical and dynamic values are equal.
 
-An interface is only equal to `nil` if both its dynamic tyoe and dynamic value are `nil`. If you assign a typed pointer that happens to be `nil` to an interface, the interface itself is not `nil`. 
+An interface is only equal to `nil` if both its dynamic tyoe and dynamic value are `nil`. If you assign a typed pointer that happens to be `nil` to an interface, the interface itself is not `nil`.
 
 2 interfaces are equal if they are both `nil`.
 
@@ -432,7 +438,7 @@ If the dynamic type assigned to the interface is not comparable (e.g. slice, map
 
 ## 16. Can 2 `nil` not equal to each other?
 
-Yes. 
+Yes.
 - typed `nil` pointer and literal `nil`
 ```go
 package main
@@ -542,14 +548,14 @@ import "fmt"
 func calculate(a int, b int) (int, int) {
 	sum := a + b
 	product := a * b
-	
+
 	return sum, product // Returns both values simultaneously
 }
 
 func main() {
 	// Receiving multiple return values
 	s, p := calculate(5, 10)
-	
+
 	fmt.Printf("Sum: %d, Product: %d\n", s, p)
 }
 ```

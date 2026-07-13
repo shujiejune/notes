@@ -63,7 +63,7 @@ Vectorization is much faster because NumPy implements it in hardware, multiplyin
 
 For multiple linear regression, gradient descent formulae become:
 $$
-w_j = w_j - \alpha\frac{1}{m}\sum_{i=1}^m(f_{\vec{w},b}(\vec{x}^{(i)}) - y^{(i)})x_j^{(i)}
+w_j = w_j - \alpha\frac{1}{m}\sum_{i=1}^m(f_{\vec{w},b}(\vec{x}^{(i)}) - y^{(i)})x_j^{(i)} \\
 b = b - \alpha\frac{1}{m}\sum_{i=1}^m(f_{\vec{w},b}(\vec{x}^{(i)}) - y^{(i)})
 $$
 
@@ -295,6 +295,61 @@ The `-1` argument tells the routine to compute the number of rows given the size
 
 **Slicing:** `start:stop:step` can be applied to both rows and columns.
 
+#### Linear Regression using Scikit-learn
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import SDGRegressor
+from sklearn.preprocessing import StandardScaler
+from lab_utils_multi import load_house_data
+from lab_utils_common import dlc
+
+np.set_printoptions(precision=2)
+plt.style.use('./deeplearning.mplstyle')
+
+# Load the data set
+X_train, y_train = load_house_data()
+X_features = ['size(sqft)','bedrooms','floors','age']
+
+# Normalize the training data
+scaler = StandardScaler()
+X_norm = scaler.fit_transform(X_train)
+print(f"Peak to Peak range by column in Raw        X:{np.ptp(X_train,axis=0)}")
+print(f"Peak to Peak range by column in Normalized X:{np.ptp(X_norm,axis=0)}")
+
+# Create and fit the regression model
+sgdr = SGDRegressor(max_iter=1000)
+sgdr.fit(X_norm, y_train)
+print(sgdr)
+print(f"number of iterations completed: {sgdr.n_iter_}, number of weight updates: {sgdr.t_}")
+
+# View parameters
+b_norm = sgdr.intercept_
+w_norm = sgdr.coef_
+print(f"model parameters:                   w: {w_norm}, b:{b_norm}")
+print( "model parameters from previous lab: w: [110.56 -21.27 -32.71 -37.97], b: 363.16")
+
+# Make a prediction using sgdr.predict()
+y_pred_sgd = sgdr.predict(X_norm)
+# Make a prediction using w, b
+y_pred = np.dot(X_norm, w_norm) + b_norm
+print(f"prediction using np.dot() and sgdr.predict match: {(y_pred == y_pred_sgd).all()}")
+
+print(f"Prediction on training set:\n{y_pred[:4]}" )
+print(f"Target values \n{y_train[:4]}")
+
+# Plot predictions and targets vs original features
+fig,ax=plt.subplots(1,4,figsize=(12,3),sharey=True)
+for i in range(len(ax)):
+    ax[i].scatter(X_train[:,i],y_train, label = 'target')
+    ax[i].set_xlabel(X_features[i])
+    ax[i].scatter(X_train[:,i],y_pred,color=dlc["dlorange"], label = 'predict')
+ax[0].set_ylabel("Price"); ax[0].legend();
+fig.suptitle("target versus prediction using z-score normalized model")
+plt.show()
+```
+
 ## Classification with Logistic Regression
 
 **Sigmoid function (logistic function)**
@@ -355,3 +410,52 @@ $$
 J(\vec{w},b)=-\frac{1}{m}\sum_{i=1}^m[y^{(i)}\log(f_{\vec{w},b}(\vec{x}^{(i)})) + (1-y^{(i)})\log(1-f_{\vec{w},b}(\vec{x}^{(i)}))]
 $$
 This particular cost function was derived using a statistical principle called **maximum likelihood estimation**.
+
+#### Logistic Regression using Scikit-learn
+
+```python
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+
+X = np.array([[0.5, 1.5], [1,1], [1.5, 0.5], [3, 0.5], [2, 2], [1, 2.5]])
+y = np.array([0, 0, 0, 1, 1, 1])
+
+lr_model = LogisticRegression()
+lr_model.fit(X, y)
+
+y_pred = lr_model.predict(X)
+print("Prediction on training set:", y_pred)
+print("Accuracy on training set:", lr_model.score(X, y))
+```
+
+### Overfitting
+
+**Underfitting (high bias)**: the model cannot fit the training data well.
+**Overfitting (high variance)**: the model fits the training data well but does not work well with new data.
+
+How to address overfitting:
+- collect more training examples
+- try with fewer features
+  - disadvantage: the algorithm is throwing away some of the info you have
+- regularization: reduce size of parameters (make them ~0)
+
+Regularization adds a term to the original cost function:
+
+$$
+J(\vec{w}, b) = \frac{1}{2m}\sum_{i=1}^m(f_{\vec{w},b}(\vec{x}^{(i)})-y^{(i)})^2 + \frac{\lambda}{2m}\sum_{j=1}^n w_j^2
+$$
+
+With this modified cost function, you could penalize the model if $w_j$ is large.
+This cost function trades off 2 goals:
+- trying to minimize the first term (original cost function) encourages the algorithm to fit the training data well.
+- trying to minimize the second term (regularization) keeps $w_j$ small, which reduces overfitting.
+The value of $\lambda$ specifies the relative importance of these 2 goals.
+
+Regularization modifies the gradient descent algorithm:
+- linear regression: Add a $\frac{\lambda}{m}w_j$ to $w_j$. No need to change $b$.
+- logistic regression: the formula for updating $w_j$ is the same as linear regression.
+
+$$
+w_j = w_j - \alpha[\frac{1}{m}\sum_{i=1}^m(f_{\vec{w},b}(\vec{x}^{(i)}) - y^{(i)})x_j^{(i)} + \frac{\lambda}{m}w_j] \\
+b = b - \alpha\frac{1}{m}\sum_{i=1}^m(f_{\vec{w},b}(\vec{x}^{(i)}) - y^{(i)})
+$$
