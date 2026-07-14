@@ -69,6 +69,7 @@ By value. For Primitives, pass copy of values. For Objects, pass copy of referen
 It's an object whose internal state cannot be changed after construction.
 
 How to create:
+
 - declare the class as final
 - make all fields private and final
 - no setter methods
@@ -192,7 +193,7 @@ If unhandled, JVM terminates the program and prints the stack trace
 
 - extends the `Thread` class and overrides the `run()` method
   - pros: simple for small, isolated tasks
-  - cons: Java only supports single inheritance, if the class extends `Thread`, it cannot extend other classes, like a BaseService
+  - cons: Java only supports single inheritance, if the class extends `Thread`, it cannot extend other classes, like a `BaseService`
 - implements the `Runnable` functional interface and overrides the `run()` method
   - pros: separate the task from the runner, can extend other classes
   - cons: the `run()` method cannot return a result or throw checked exceptions
@@ -229,7 +230,7 @@ Difference between `start()` and `run()`:
 ## 26. Difference between `Runnable` and `Callable`
 
 - `Runnable` has the `run()` method that returns `void`, `Callable` has a `call()` method that returns `V` (generic type)
-- `Runnable` cannot throw checked exceptions, must handle them using try-catch inside the `run()`. `Callable` can propagate checked exceptions up to the caller by declaring `call()` with throws.
+- `Runnable` cannot throw checked exceptions, must handle them using try-catch inside the `run()`. `Callable` can propagate checked exceptions up to the caller by declaring `call()` with `throws`.
 - `Runnable` can be executed with `Thread` class or `ExecutorService`, while `Callable` can only be executed by `ExecutorService`.
 
 ```java
@@ -258,6 +259,7 @@ Since any Java object can be a monitor, the methods must be available to every o
 There can be multiple threads waiting on the state of an object. If they were in the `Thread` class, then the shared object would have to know which threads are waiting on it, i.e. tight coupling.
 
 When a thread calls `object.wait()`:
+
 - it gives up the lock it holds on that specific object
 - it goes to sleep
 
@@ -265,11 +267,12 @@ When a thread calls `object.wait()`:
 
 - is defined in `java.lang.Thread` class
 - allows one thread to wait for the completion of another
-- `join(timeout)`: the main thread will wait for the new thread to finish for up to `timeout` ms. afterwards, if the new thread is still running, the main thread will resume.
+- `join(timeout)`: the main thread will wait for the new thread to finish for up to `timeout` ms. Afterwards, if the new thread is still running, the main thread will resume.
 
 ## 29. Explain thread life cycle
 
 Thread Scheduler of JVM manages the state of thread
+
 - `NEW`: just created but not started
 - `RUNNABLE`: created, started and able to run
   - `RUNNING`: is currently running
@@ -291,6 +294,7 @@ Thread Scheduler of JVM manages the state of thread
 ## 31. What is `countDownLatch`?
 
 It's a synchronization aid that allows one or more threads to wait until a set of operations being performed in other threads completes.
+
 - initialize `countDownLatch` with a counter
 - the main thread calls `await()`, which blocks it until the counter reaches 0
 - other worker threads perform their tasks and call `countDown()` when they finish
@@ -319,18 +323,53 @@ It's a thread synchronization utility that maintains a set of permits. It's used
 - maintains a thread pool, reuses a fixed number of threads to execute tasks
 - allows task queue when all threads in a pool are busy
 - decouples task and execution, only cares about how (deciding which thread runs it, managing lifecycle, handling shutdown)
-- uses `Callable` to return a `Future` or `CompletableFuture`, to see if the task is done, wait for the result, or handle exception
+- uses `Callable` to return a `Future` (or `CompletableFuture`*), to see if the task is done, wait for the result, or handle exception
 - provides clean methods like `.shutdown()` or `.shutdownNow()`
+
+Actually, `ExecutorService.submit(Callable)` strictly returns a `Future` interface.
+If you need a `CompletableFuture` that runs your task inside a specific `ExecutorService`, use one of the following design patterns.
+
+### Pass the thread pool directly into the `CompletableFuture` factory methods
+
+```java
+ExecutorService executor = Executors.newFixedThreadPool(4);
+
+// This automatically routes the task to your custom executor
+CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
+  return "Task Result";
+}, executor);
+```
+
+### Handle checked exceptions with an adapter
+
+If your existing `Callable` throws checked exceptions, you can wrap it inside a `CompletableFuture.supplyAsync` call by catching and rethrowing it as a `CompletionException`.
+
+```java
+Callable<String> myCallableTask = () -> {
+  if (somethingFails) throw new IOException("Disk error");
+  return "Success";
+};
+
+CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+  try {
+    return myCallableTask.call();
+  } catch (Exception e) {
+    throw new CompletionException(e);
+  }
+}, executor);
+```
 
 ## 35. What is a deadlock? How to handle deadlock?
 
 Necessary conditions:
+
 - mutual exclusion (only 1 process can use a resource at a given time)
 - hold and wait
 - no preemption
 - circular wait
 
 Solutions:
+
 - try lock with timeout and retry
 - lock ordering
 - minimize the number of locks a thread needs at once
@@ -340,6 +379,7 @@ Solutions:
 It's the mechanism that ensures only one thread can access a shared resource at a time.
 
 How to do sync:
+
 - add `synchronized` keyword to method signature
 - instance method: locks the current instance (`this`)
 - static method: locks the `Class` object
@@ -361,9 +401,7 @@ The sole purpose is to mark a class so that JVM can treat objects of that class 
 Examples:
 
 - `Serializable`: tells the JVM that this object can be converted into a byte stream
-
 - `Cloneable`: indicates it's legal to use `Object.clone()` on instances of this class
-
 - `Remote`: used in RMI (remote method invocation) to identify interfaces whose methods may be invoked in a non-local virtual machine
 
 ## 39. What does Serialization mean?
@@ -373,9 +411,7 @@ It's the process of converting the state of a Java object into a byte stream.
 A byte stream can be:
 
 - saved to a file (persistence)
-
 - sent over a network to another JVM (communication)
-
 - stored in a cache (memory management)
 
 ## 40. What's the purpose of transient variables?
@@ -384,31 +420,35 @@ When you mark a variable as `transient`, you tell the JVM: ignore this field dur
 
 ## 41. How to do serialization and deserialization?
 
-classical Java way
+### Classical Java way
 
 ```java
 Employee emp = new Employee("Fedora", 101, "SecretPass");
 // Serialization
 try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("employee.ser"))) {
-	out.writeObject(emp);
-	System.out.println("Object has been serialized");
+  out.writeObject(emp);
+  System.out.println("Object has been serialized");
 } catch (IOException e) {
-	e.printStackTrace();
+  e.printStackTrace();
 }
 
 // Deserialization
 try (ObjectInputStream in = new ObjectInputStream(new FileInputStream("employee.ser"))) {
-	Employee deserializedEmp = (Employee) in.readObject();
-	System.out.println("Object has been deserialized");
-	System.out.println("Name: " + deserializedEmp.getName());
-	// password will be null because it was marked as transient
-	System.out.println("Password: " + deserializedEmp.getPassword());
+  Employee deserializedEmp = (Employee) in.readObject();
+  System.out.println("Object has been deserialized");
+  System.out.println("Name: " + deserializedEmp.getName());
+  // password will be null because it was marked as transient
+  System.out.println("Password: " + deserializedEmp.getPassword());
 } catch (IOException e) {
-	e.printStackTrace();
+  e.printStackTrace();
 }
 ```
 
-JSON with Jackson
+Multiple lines in the `try` clause:
+This is try-with-resources, guaranteeing the file will be closed automatically, even if an error occurs.
+Without this, you would have to write a much longer `finally` block to manually close the stream.
+
+### JSON with Jackson
 
 ```java
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -434,7 +474,7 @@ Detect tools: VisualVM, JConsole, Java Flight Recorder, Eclipse Memory Analyzer
 
 **YoungGen:** where all new objects are born, designed for high-speed allocation and frequent GC
 
-**OldGen:** an object survives enough rounds of minor GC and is promoted here. major GC happens with stop-the-world pause in the app
+**OldGen:** an object survives enough rounds of minor GC and is promoted here. Major GC happens with stop-the-world pause in the app
 
 **PermGen:** part of the Java Heap, where JVM stores metadata about classes
 
@@ -443,6 +483,7 @@ Detect tools: VisualVM, JConsole, Java Flight Recorder, Eclipse Memory Analyzer
 ## 44. What are the components of JVM?
 
 3 subsystems:
+
 - class loader: responsible for dynamic class loading, handling 3 phases
   - loading: finds the .class file and imports binary data into the memory
   - linking: verifies the bytecode is safe and follows Java's rules
