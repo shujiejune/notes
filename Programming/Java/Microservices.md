@@ -90,17 +90,17 @@ Track health, performance, and behavior across a distributed network.
 
 - metrics (what): Spring Actuator provides built-in endpoints like /health and /metrics that expose the internal state of the app.
 - logging (why):  ELK (Elasticsearch, Logstash, Kibana) gather all discrete events together. we can also use AWS CloudWatch to log the event details.
-- tracing (where): Spring Cloud Sleuth assigns a unique trace ID to a request when it enters the API gateway, and it will be passed along headers to every downstream service, collected and visualized by Zipkin 
+- tracing (where): Spring Cloud Sleuth assigns a unique trace ID to a request when it enters the API gateway, and it will be passed along headers to every downstream service, collected and visualized by Zipkin
 
 ### 7.  Why do we need a gateway? Is a gateway necessary?
 
-An API gateway acts as a single entry point for all client requests. 
+An API gateway acts as a single entry point for all client requests.
 
 - **centralized security:** do not need to implement authentication and authorization in every service
 - **request routing and aggregation:** a client might need data from 3 different services to do a single thing (e.g. present an order details page), and the gateway can either route it or aggregate data from 3 different services and return a single JSON response
 - **protocol translation:** the internal services might communicate using gRPC, but the web browser doesn't support gRPC. the gateway can take a REST/HTTP request from the browser and translate it into a gRPC call.
 
-key responsibilities:
+Key responsibilities:
 
 - **rate limiting:** prevent a malicious user from overwhelming the system
 - **load balancing:** distribute incoming traffic across multiple instances of a service
@@ -113,16 +113,16 @@ It's not strictly necessary for few services but is recommended.
 
 4-6 environments
 
-core:
+Core:
 
 - local: your personal machine, where you write code and run unit tests
 - dev: a shared cloud environment where multiple developers merge their code and different microservices are integrated together
 - pre-prod (staging): a mirror image of the production environment with the same config, similar data, and same infra.
 - prod: the live environment where real users interact with your app
 
-specialized:
+Specialized:
 
-- QA / tesing: quality assurance space to run regression tests without being interrupted by unstable code
+- QA / testing: quality assurance space to run regression tests without being interrupted by unstable code
 - load testing, user acceptance, etc.
 
 ### 9. How did you deploy your application?
@@ -194,7 +194,7 @@ It's a solution to messages rejection or expiration:
 ### 17. How to secure your endpoint? (In other words, How can you check if a HTTP call is valid in microservices?)
 
 - API gateway (centralized security)
-  - the gateway checks if the request has a valid JWT. if the token is missing or expired, the request is rejected before it reaches internal services. 
+  - the gateway checks if the request has a valid JWT. if the token is missing or expired, the request is rejected before it reaches internal services.
   - once the token is verified, it extracts the user info (id, roles, etc.) and injects them into the HTTP headers, then forwards the request to the internal services so they know which user is making the call.
 - RBAC
   - the JWT contains claims (e.g. `user_role: “ADMIN”`), use Spring Security annotations to check roles inside Spring Boot service
@@ -235,7 +235,7 @@ public ResponseEntity<?> approveShipment(@PathVariable String id) {
   - cons
     - hardware limit
     - downtime: upgrading often leads to a temporary outage
-    - no fault tolenrance: if the server crashes, the whole app goes down
+    - no fault tolerance: if the server crashes, the whole app goes down
 - horizontal: add more machines (instances) to pool of resources, e.g. running 10 small instanced of the `ShipmentService` behind an AWS load balancer
   - pros
     - high availability
@@ -245,12 +245,12 @@ public ResponseEntity<?> approveShipment(@PathVariable String id) {
 
 ### 21. Tell me about your experience with Cloud Service. Ex. AWS, GCP, Azure
 
-- IAM (RBAC): 
-  - I don't give the entire EC2 node permission to S3, I create a specific IAM role for the `ShipmentService`. 
-  - I write JSON policies to specify the permission. 
+- IAM (RBAC):
+  - I don't give the entire EC2 node permission to S3, I create a specific IAM role for the `ShipmentService`.
+  - I write JSON policies to specify the permission.
   - For team collaboration, I organize users into groups and attach policies to groups.
-- RDS: 
-  - I use it for relational database, with MySQL or PostgreSQL. 
+-RDS:
+  - I use it for relational database, with MySQL or PostgreSQL.
   - For production, I enable Multi-AZ. AWS automatically maintains a sync standby replica in a different availability zone. 
   - I offload Read traffic to a Read replica, keeping the primary db free to Write operations.
   - I configure a 7-day retention period for Point-In-Time recovery.
@@ -261,6 +261,7 @@ public ResponseEntity<?> approveShipment(@PathVariable String id) {
   - I enable versioning on critical buckets, so that I can easily roll back to the previous version if an object is accidentally deleted or overwritten.
 
 IaaS (Infra as a Service):
+
 - virtual machines
 - EC2
 PaaS (Platform as a Service):
@@ -270,6 +271,7 @@ SaaS (Software as a Service):
 - DynamoDB
 
 3-tier architecture:
+
 - web server
 - app server
 - db server
@@ -277,6 +279,7 @@ SaaS (Software as a Service):
 VPC (Virtual Private Cloud): a virtual network dedicated to an AWS account in one region
 
 S3 (Simple Storage Service) components:
+
 - bucket (folder): created within an AWS region
   - blast radius of failure is within that region, will not affect data in other regions
   - need globally unique name
@@ -284,10 +287,11 @@ S3 (Simple Storage Service) components:
 - object (file)
   - key: unique identifier within the bucket, name of the object
   - value: data content made up of bytes
-  - version ID (optional): object versioning can be enabled at bucket level. if enabled, every version of the object will be assigned a version ID. 
+  - version ID (optional): object versioning can be enabled at bucket level. if enabled, every version of the object will be assigned a version ID.
   - metadata, e.g. last modified date
 
 S3 security:
+
 - new created buckets are private by default
 - access control
   - bucket policy: resource-based IAM policy, only the owner can associate a policy with a bucket
@@ -303,9 +307,9 @@ S3 security:
 
 It's a distributed event streaming platform, allows you to publish, subscribe to, store, and process streams of records in real-time.
 
-- log structure: every event is appended to a log. events cannot be changed once written.
-- persistence: unlike RabbitMQ, Kafka doesn't delete messages once they are read. it keeps them for a set period (usually 7 days), allows different services to replay the data.
-- topics & partitions: data is organized into topics. a topic is splitted into partitions across different brokers. 
+- log structure: every event is appended to a log. Events cannot be changed once written.
+- persistence: unlike RabbitMQ, Kafka doesn't delete messages once they are read. It keeps them for a set period (usually 7 days), allows different services to replay the data.
+- topics & partitions: data is organized into topics. A topic is splitted into partitions across different brokers.
 
 #### Kafka core components
 
@@ -313,7 +317,7 @@ It's a distributed event streaming platform, allows you to publish, subscribe to
 - **consumer**
 - **cluster:** a group of brokers working together as a single distributed system to provide horizontally scalable, fault-tolerant messaging
   - broker: a single server running Kafka, a core component that handles message storage (stores topic partitions as append-only log files on the disk), replication, and client requests (incl. producers write and consumers read)
-    - partition: when a topic becomes larger and larger and cannot be stored in one machine, break a single topic log into multiple logs, each part is called a partition. partitions can be stored in different places. Kafka can scale up to 2 million partitions.
+    - partition: when a topic becomes larger and larger and cannot be stored in one machine, break a single topic log into multiple logs, each part is called a partition. Partitions can be stored in different places. Kafka can scale up to 2 million partitions.
     - replication: Kafka maintains multiple copies of each partition across brokers for fault tolerance. One replica is the leader, others are followers.
 - **zookeeper (KRaft):** helps manage
   - store and sync cluster metadata
@@ -324,7 +328,7 @@ It's a distributed event streaming platform, allows you to publish, subscribe to
   - structure
     - timestamp: when the event was created or received
     - value: the actual event content (bytes, JSON, protobuf, Avro, etc.), serialization handled by producers/consumers
-    - key (optional): used for partitioning and event ordering within partition. messages with the same key are in the same partition. if no key specified, messaged will be distributed round-robin among the partitions.
+    - key (optional): used for partitioning and event ordering within partition. Messages with the same key are in the same partition. If no key specified, messages will be distributed round-robin among the partitions.
     - offset: unique sequential ID assigned by Kafka within each partition
     - headers (optional): key-value metadata pairs
   - features
@@ -334,15 +338,15 @@ It's a distributed event streaming platform, allows you to publish, subscribe to
 #### Journey of a message in Kafka
 
 - producer publishes a message to topic(s): producer decides which partition the message goes to, the decision happens on the client side before sending
-- broker stores the message in a log and assigns each message an offset for replay. multiple consumers can consume the same log sequence in different time.
-- consumer subscribes to a topic and reads messages from one or more partitions. consumers belong to a consumer group.
+- broker stores the message in a log and assigns each message an offset for replay. Multiple consumers can consume the same log sequence in different time.
+- consumer subscribes to a topic and reads messages from one or more partitions. Consumers belong to a consumer group.
   - each partition is assigned to only one consumer in the group to ensure parallelism
   - if a consumer fails, another consumer in the group will take over
   - consumers track the offset of messages they have processed to avoid duplication
 
 **Consumer group** is a set of consumers sharing the load of consuming messages from a topic, ensuring no duplication within the group.
 One broker acts as the group coordinator, managing membership and triggering rebalances.
-Different consumer groups (e.g. BillingService and AnalyticsService) can consume the same topic without affecting each other.
+Different consumer groups (e.g. `BillingService` and `AnalyticsService`) can consume the same topic without affecting each other.
 
 #### How to ensure you consume all messages in Kafka without message loss
 
@@ -357,7 +361,7 @@ Different consumer groups (e.g. BillingService and AnalyticsService) can consume
 
 Kafka Streams is a client library for building apps and microservices where the input and output data are stored in Kafka clusters. It allows you to perform complex processing on the data.
 
-capabilities:
+Capabilities:
 
 - stateful processing: can remember things across events
 - windowing: you can group events by time
@@ -370,7 +374,7 @@ Kafka is the storage and transportation layer, Kafka Streams is the brain that p
 
 - partitioned architecture: Kafka distributes messages across partitions, enabling parallel processing and horizontal scaling. RabbitMQ uses queues, which can be bottlenecks.
 - consumer parallelism: Kafka consumers within a group can read from multiple partitions concurrently, improving throughput. RabbitMQ limits each message to one consumer at a time per queue.
-- high throughput: Kafka handles millions of messages per second, optimized for event streaming, while RabbitMQ is designed for low-latency messaging. 
+- high throughput: Kafka handles millions of messages per second, optimized for event streaming, while RabbitMQ is designed for low-latency messaging.
 
 ### 23. What is ELK?
 
@@ -378,7 +382,7 @@ It's a stack consists of Elasticsearch, Logstash, and Kibana, allows you to take
 
 - Elasticsearch: a NoSQL db, acts as the storage and search engine. it's horizontally scalable and incredibly fast at full-text searches, e.g. search for an Order ID across millions of logs in ms.
 - Logstash: a server-side data-processing pipeline, acts as ingestion engine. it collects data from different sources (like microservices), transforms it (e.g. parsing a raw string into structured JSON) and sends it to Elasticsearch.
-- Kibana: a visualization tool, acts as user interface. it alllows you to create dashboards, line graphs, pie charts. 
+- Kibana: a visualization tool, acts as user interface. it alllows you to create dashboards, line graphs, pie charts.
 
 Why need them: without ELK, you have to manually SSH into 10 different Docker containers to find the logs. With ELK:
 
@@ -386,7 +390,7 @@ Why need them: without ELK, you have to manually SSH into 10 different Docker co
 - correlation: you can use a Trace ID to see the logs from the Gateway, and the following services all in one screen, ordered by time.
 - monitoring: you can set up alerts: if Kibana sees the word “Critical” more than 5 times in a min, it can trigger a Slack notif.
 
-### 24. ​Explain distributed database management (2-phase commit, SAGA)
+### 24. Explain distributed database management (2-phase commit, SAGA)
 
 Distributed transaction: a set of operations across multiple databases or services that must succeed or fail as a single unit.
 
