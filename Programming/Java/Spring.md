@@ -33,7 +33,7 @@ Spring IoC Container: where we handle Bean creation, DI, and lifecycle managemen
 ## 3. How to inject Beans in Spring?
 
 - use `@Autowired` annotation to automatically inject a required dependency (bean) into a class
-- can be used to fields, setters, and constructors. if a class has only one constructor, Spring will inject dependencies automatically without this annotation
+- can be used to fields, setters, and constructors. If a class has only one constructor, Spring will inject dependencies automatically without this annotation
   - differences between setter and constructor injection
     - required upon creation?
       - for constructor, dependencies are required upon creation of targets
@@ -48,8 +48,8 @@ Spring IoC Container: where we handle Bean creation, DI, and lifecycle managemen
       - for constructor, it fails immediately, throws a `BeanCurrentlyInCreationException`
       - for setters, Spring often resolves it by creating hollow objects and then wiring them
   - how to make setter injection mandatory
-    - `@PostConstruct`: a `validate()` method runs after all injections are finished, if the dependency is still null, throw an exception manually  
-    - `@Autowired(required = true)` 
+    - `@PostConstruct`: a `validate()` method runs after all injections are finished, if the dependency is still null, throw an exception manually
+    - `@Autowired(required = true)`
     - `@Required (legacy)`
 
 ## 4. How to configure/create Beans in Spring?
@@ -76,7 +76,7 @@ Spring IoC Container: where we handle Bean creation, DI, and lifecycle managemen
 
 ## 6. Describe Bean scopes supported by Spring
 
-### a.​ Singleton vs Prototype
+### a. Singleton vs Prototype
 
 | Feature        | Singleton                              | Prototype                                             |
 | -------------- | -------------------------------------- | ----------------------------------------------------- |
@@ -92,15 +92,15 @@ Other scopes (only valid in a web-aware Spring `ApplicationContext`):
 - application: one for a `ServletContext`
 - websocket: one for a `WebSocket`
 
-### b.​ Is singleton bean thread safe?
+### b. Is singleton bean thread safe?
 
 No, it's shared across every thread in the app. If this bean has mutable fields, it's not thread-safe.
 
-### c.​ What’s the default bean scope?
+### c. What’s the default bean scope?
 
 Singleton
 
-### d.​ How to define the scope of a spring bean?
+### d. How to define the scope of a spring bean?
 
 - annotation: `@Scope("prototype")`
 - Java configuration under `@Bean`: `@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)`
@@ -123,7 +123,7 @@ Use case (wrong): A `SessionData` (prototype) injected into a `UserDashboard`
 
 Solutions:
 
-- create an abstract `getPrototype()` method in the Singleton class and annotated with `@Lookup`. Spring will override this method to return a new instance of Prototype bean from the container every time it's called. 
+- create an abstract `getPrototype()` method in the Singleton class and annotated with `@Lookup`. Spring will override this method to return a new instance of Prototype bean from the container every time it's called.
 - instead of injecting the bean itself, inject a factory `ObjectProvider<Prototype>`
 - configure the Prototype bean to use a proxy. When the Singleton calls a method on the proxy, the proxy reaches out to the Spring container to find or create the correct instance.
 
@@ -132,10 +132,10 @@ Solutions:
 How Spring resolves `@Autowired`:
 
 - by type: Spring looks for a bean that matches the class or interface type of the field
-- by Qualifier: if multiple beans of the type exists, Spring looks for a `@Qualifier` on the field to see if you specified a name 
-- by name: if there's no `@Qualifier`, Spring tries to match the variable name with bean id 
+- by Qualifier: if multiple beans of the type exists, Spring looks for a `@Qualifier` on the field to see if you specified a name
+- by name: if there's no `@Qualifier`, Spring tries to match the variable name with bean id
 
-For example, you may have a `PaymentService` interface with 2 implementations `StripeService` and `PaypalService`. If you autowired `PaymentService`, Spring will crash because it doesn't know which one to pick. Solution:
+For example, you may have a `PaymentService` interface with 2 implementations `StripeService` and `PaypalService`. If you autowired `PaymentService`, Spring will crash because it doesn't know which one to pick. Solution:
 
 - use `@Primary` on the bean class to annotate the default choice.
 - use `@Qualifier("paypalService")` at the injection point to explicitly point the bean you want. This overrides `@Primary`.
@@ -150,7 +150,7 @@ How to prevent:
 - use setter injection
 - mark a dependency with `@Lazy` in the constructor, so that Spring injects a proxy object
 
-## 11. What is the usage of `@SpringBootApplication`? 
+## 11. What is the usage of `@SpringBootApplication`?
 
 It's the meta annotation that combines 3 annotations:
 
@@ -246,7 +246,7 @@ It's a synchronous client used to make HTTP requests. It handles the boilerplate
 
 ## 20. How do you use Spring Data Repository? (pagination -> `Slice` and `Page`)
 
-To enable pagination, the repository interface should extends `JpaRepository` or `PagingAndSortingRepository`, and add a `Pageable` parameter to the query methods.
+To enable pagination, the repository interface should extends `JpaRepository` or `PagingAndSortingRepository`, and add a `Pageable` parameter to the query methods.
 
 `Page` vs `Slice`
 
@@ -357,6 +357,7 @@ public class ExceptionLoggingAspect {
 ```
 
 How to handle exceptions in a Spring app:
+
 - Apply `@RestControllerAdvice` to the `GlobalExceptionHandler` class. It acts as an interceptor that catches exceptions thrown by any controller in the app.
 - Use Spring AOP to intercept the exceptions at the service layer before they reach the controller.
   - log the stack trace and input parameters for dev
@@ -415,8 +416,8 @@ Authentication (login):
 Authorization (subsequent requests):
 
 - interception: the request hits the Spring Security Filter Chain, a `JwtFilter` intercepts it before it reaches the controller
-- extraction: the filter looks for Authorization header and extract the String after `Bearer`
-- validation: the filter calls `JwtService` to check if the signature is valid, if the token has expired, and extract the username/roles from the payload
+- extraction: the filter looks for Authorization header and extracts the String after `Bearer`
+- validation: the filter calls `JwtService` to check if the signature is valid, if the token has expired, and extracts the username/roles from the payload
 - security context: if valid, the filter creates a `UsernamePasswordAuthenticationToken` and puts it into the `SecurityContextHolder`
 - execution: Spring Security now sees the user is authenticated for this thread and allows the request to proceed to `@RestController`
 

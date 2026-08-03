@@ -1,12 +1,8 @@
----
-_width: wide
-type: Note
----
 # Microservices
 
-### 1. Difference between Monolithic vs. Microservice, advantages and disadvantages
+## 1. Difference between Monolithic vs. Microservice, advantages and disadvantages
 
-monolith: all components (UI, business logic, db access) are bundled into a single codebase and deployed as one unit
+Monolith: all components (UI, business logic, db access) are bundled into a single codebase and deployed as one unit
 
 - pros
   - simple deployment: just one file to move to the server
@@ -15,9 +11,9 @@ monolith: all components (UI, business logic, db access) are bundled into a sing
 - cons
   - scaling issue: you must scale the entire app even if one module is slow
   - technical debt: overtime, the code is spaghetti
-  - barrier to innocation: locked into one tech stack
+  - barrier to innovation: locked into one tech stack
 
-microservices: the app is broken into a collection of small, independent services that communicate over a network (using REST, gRPC, message brokers). each service focuses on a single business.
+Microservices: the app is broken into a collection of small, independent services that communicate over a network (using REST, gRPC, message brokers). Each service focuses on a single business.
 
 - pros
   - independent scaling: only scale the services under heavy load
@@ -28,7 +24,7 @@ microservices: the app is broken into a collection of small, independent service
   - network latency
   - data consistency: managing transactions across multiple db is difficult (often requiring SAGA)
 
-### 2. What is cascading failure? How to prevent this failure?
+## 2. What is cascading failure? How to prevent this failure?
 
 A fault in one service causes a chain reaction of failures in dependent services.
 
@@ -37,7 +33,7 @@ How to prevent:
 - circuit breaker pattern: stops waiting and prevents thread exhaustion
 - bulkhead pattern: assigns a thread pool for each downstream service
 - timeout: never let a request waits indefinitely
-- retry with exponential backoff: if a service fails, do not immediately hit it again
+- retry with exponential back-off: if a service fails, do not immediately hit it again
 - load shedding & throttling: when a service is overwhelmed, it starts rejecting low-priority requests
 
 In Spring apps, use Resilience4j to combine these patterns.
@@ -51,28 +47,28 @@ public Shipment getStatus(String id) {
 }
 ```
 
-### 3. What is fault tolerance? How to make your microservice fault tolerance?
+## 3. What is fault tolerance? How to make your microservice fault tolerance?
 
 It's the ability of a system to continue operating even when one or more of its components fail.
 
-key concepts:
+Key concepts:
 
 - resilience: recover from a failure and return to a functional state
 - self-healing: automatically detect and fix a failure
 - graceful degradation: provide a fallback or limited functionality instead of a total crash
 
-### 4. How do microservices communicate?
+## 4. How do microservices communicate?
 
 2 styles
 
 - sync: request-response, REST or gRPC, HTTP calls using RestTemplate (deprecated), HttpClient, Feign Client, etc.
 - async: event-driven, message broker, using RabbitMQ, Kafka, etc.
 
-### 5. What is Swagger?
+## 5. What is Swagger?
 
 It's an open source tool built around the OpenAPI specs that helps developers build RESTful apps.
 
-core components:
+Core components:
 
 - Swagger UI: turns OpenAPI to an interactive webpage, allows anyone to interact with the API
 - Swagger editor: a browser-based editor where you can write and edit API specs in YAML or JSON and see the doc render in real-time
@@ -84,21 +80,21 @@ How it works in Spring:
 - you add `@Tag` to group endpoints or `@Operation` to describe what a method does
 - when you run the app and visit `/swagger-ui.html`, you see a dashboard
 
-### 6. How do you monitor your application?
+## 6. How do you monitor your application?
 
 Track health, performance, and behavior across a distributed network.
 
-- metrics (what): Spring Actuator provides built-in endpoints like /health and /metrics that expose the internal state of the app.
-- logging (why):  ELK (Elasticsearch, Logstash, Kibana) gather all discrete events together. we can also use AWS CloudWatch to log the event details.
+- metrics (what): Spring Actuator provides built-in endpoints like `/health` and `/metrics` that expose the internal state of the app.
+- logging (why):  ELK (Elasticsearch, Logstash, Kibana) gather all discrete events together. We can also use AWS CloudWatch to log the event details.
 - tracing (where): Spring Cloud Sleuth assigns a unique trace ID to a request when it enters the API gateway, and it will be passed along headers to every downstream service, collected and visualized by Zipkin
 
-### 7.  Why do we need a gateway? Is a gateway necessary?
+## 7. Why do we need a gateway? Is a gateway necessary?
 
 An API gateway acts as a single entry point for all client requests.
 
 - **centralized security:** do not need to implement authentication and authorization in every service
 - **request routing and aggregation:** a client might need data from 3 different services to do a single thing (e.g. present an order details page), and the gateway can either route it or aggregate data from 3 different services and return a single JSON response
-- **protocol translation:** the internal services might communicate using gRPC, but the web browser doesn't support gRPC. the gateway can take a REST/HTTP request from the browser and translate it into a gRPC call.
+- **protocol translation:** the internal services might communicate using gRPC, but the web browser doesn't support gRPC. The gateway can take a REST/HTTP request from the browser and translate it into a gRPC call.
 
 Key responsibilities:
 
@@ -109,7 +105,7 @@ Key responsibilities:
 
 It's not strictly necessary for few services but is recommended.
 
-### 8. How many environments can your application have?
+## 8. How many environments can your application have?
 
 4-6 environments
 
@@ -125,7 +121,7 @@ Specialized:
 - QA / testing: quality assurance space to run regression tests without being interrupted by unstable code
 - load testing, user acceptance, etc.
 
-### 9. How did you deploy your application?
+## 9. How did you deploy your application?
 
 CI/CD pipeline
 
@@ -136,39 +132,39 @@ CI/CD pipeline
   - AWS EC2: manually install Docker on a virtual machine and run your containers, simple
   - AWS EKR: manage Kubernetes, AWS handles the master node, you handle the worker nodes
 
-### 10. Usage of Jenkins. (Keyword: CI/CD)
+## 10. Usage of Jenkins. (Keyword: CI/CD)
 
 Jenkins automates the transition from your code from local to prod environments.
 
 It handles 2 critical phases of software lifecycle:
 
-- continuous integration (CI): every time you git push, Jenkins automatically triggers a build. it compiles your code and runs your unit and integration tests
+- continuous integration (CI): every time you git push, Jenkins automatically triggers a build. It compiles your code and runs your unit and integration tests
 - continuous deployment (CD): once the tests pass, Jenkins packages your app into a Docker image, pushes it into a registry like Docker Hub or AWS ECR, and then executes commands to update your Kubernetes cluster
 
-### 11. How to debug your microservice?
+## 11. How to debug your microservice?
 
 - gather info: look at the logs of Spring Actuator to check the metrics, identify the trace and determine the scope
 - check logs: once you have the trace ID, go to the centralized logging system like Kibana (ELK) to see the details, review metadata and look at the exceptions
 - analyze: determine if the service is failing due to its own fault or because a downstream service
-- reproduce issue: use Postman to hit the specific service endpoint with the problematic payload. if the issue is related to a timeout, use Resilience4j to manually inject latency into the dev environment and confirms the system behaves exactly as observed in prod
+- reproduce issue: use Postman to hit the specific service endpoint with the problematic payload. If the issue is related to a timeout, use Resilience4j to manually inject latency into the dev environment and confirms the system behaves exactly as observed in prod
 
-### 12. How do you implement async in web applications?
+## 12. How do you implement async in web applications?
 
-- mark a method with `@Async` in Spring Boot app. When this method is called, Spring runs that method in a separate thread pool 
+- mark a method with `@Async` in Spring Boot app. When this method is called, Spring runs that method in a separate thread pool
 - use message queues like RabbitMQ or Kafka. This decouples services, service A doesn't need to know about if service B is online, they only need to agree on the message format.
 
-### 13. What is RabbitMQ and what can it help us to achieve in a web application?
+## 13. What is RabbitMQ and what can it help us to achieve in a web application?
 
 RabbitMQ is a message broker that acts as a middleware accepts, stores, and forwards digital messages between different services in the app.
 
 It can achieve:
 
 - async processing: instead of waiting for a long time to finish a slow task, the web server sends a task to RabbitMQ and tells the user “we're working on it”.
-- decoupling services: the upstream service doesn't need to know info about the downstream service, it just drops a message into RabbitMQ. good for maintainability.
+- decoupling services: the upstream service doesn't need to know info about the downstream service, it just drops a message into RabbitMQ. Good for maintainability.
 - scalability: the app might have spiky requests, and you can spin up multiple worker services to process messages in the RabbitMQ queues, preventing db from overwhelmed.
 - fault tolerance: if a service crashes while processing a message, RabbitMQ can detect the failure and put the message back in the queue to be tried again
 
-### 14. What are the components of RabbitMQ? Describe the role of each component.
+## 14. What are the components of RabbitMQ? Describe the role of each component.
 
 - producer: the Spring Boot backend, creates a message and sends it to an exchange
 - exchange: the routing gateway that looks at the message's routing key and decides which queue it should go to
@@ -176,14 +172,14 @@ It can achieve:
 - queue: the buffer that stores messages until a consumer is ready
 - consumer: a background service (worker) that is listening to the queue to pull the message and process it, and sends an ACK back to RabbitMQ
 
-### 15. What are different types of exchanges that exist in RabbitMQ? Explain each exchange.
+## 15. What are different types of exchanges that exist in RabbitMQ? Explain each exchange.
 
 - direct: add if routing key is equal to binding key
 - fanout: add anyways, and use round-robin strategy to distribute message across the consumers
 - topic: add if routing key matches a certain pattern
 - header: route messages based on keys present in the header, possible to bind a queue to multiple headers
 
-### 16. What is a dead letter exchange (DLX)?
+## 16. What is a dead letter exchange (DLX)?
 
 It's a solution to messages rejection or expiration:
 
@@ -191,10 +187,10 @@ It's a solution to messages rejection or expiration:
 - the message is then routed to a Dead Letter Queue (DLQ), can config DLQ for different types of failed messages
 - can inspect the messages in DLQ (format issue, consumer logic, etc.) to identify and fix the issue, and republish it back to the normal queue for reprocessing
 
-### 17. How to secure your endpoint? (In other words, How can you check if a HTTP call is valid in microservices?)
+## 17. How to secure your endpoint? (In other words, How can you check if a HTTP call is valid in microservices?)
 
 - API gateway (centralized security)
-  - the gateway checks if the request has a valid JWT. if the token is missing or expired, the request is rejected before it reaches internal services.
+  - the gateway checks if the request has a valid JWT. If the token is missing or expired, the request is rejected before it reaches internal services.
   - once the token is verified, it extracts the user info (id, roles, etc.) and injects them into the HTTP headers, then forwards the request to the internal services so they know which user is making the call.
 - RBAC
   - the JWT contains claims (e.g. `user_role: “ADMIN”`), use Spring Security annotations to check roles inside Spring Boot service
@@ -213,20 +209,20 @@ public ResponseEntity<?> approveShipment(@PathVariable String id) {
   - use the gateway to limit how many calls a user can make, preventing DDoS attacks
   - CORS (cross-origin resource sharing): ensure the backend only accepts requests from the specific frontend domain
 
-### 18. Where do you store your configuration file when you use microservices?
+## 18. Where do you store your configuration file when you use microservices?
 
-- create a centralized config server, sync the updated config in Git, use `@RefreshScope` to pick up new settings without restarting 
+- create a centralized config server, sync the updated config in Git, use `@RefreshScope` to pick up new settings without restarting
 - in Kubernetes, use ConfigMaps for non-sensitive data, Secrets for sensitive data. Kubernetes injects these these values into the container as either env or mounted volumes at runtime
 - store dynamic credentials (e.g. a db password that expires every 24 hours) in HashiCorp Vault
 
-### 19. How did you do user authorization in microservices
+## 19. How did you do user authorization in microservices
 
 - `AuthService` issues JWT with roles and permissions embedded as claims
 - API gateway validates the token signature and performs path filtering
 - microservice decodes JWT and applys `@PreAuthorize` for specific methods in controller
 - db filters data so user can only see records linked to their `user_id`
 
-### 20. Vertical Scaling and Horizontal scaling in your application
+## 20. Vertical Scaling and Horizontal scaling in your application
 
 - vertical: add more CPU, RAM, Disk to an existing server or db instance, e.g. upgrading AWS `t3.medium` to `r5.xlarge`
   - pros
@@ -236,14 +232,14 @@ public ResponseEntity<?> approveShipment(@PathVariable String id) {
     - hardware limit
     - downtime: upgrading often leads to a temporary outage
     - no fault tolerance: if the server crashes, the whole app goes down
-- horizontal: add more machines (instances) to pool of resources, e.g. running 10 small instanced of the `ShipmentService` behind an AWS load balancer
+- horizontal: add more machines (instances) to pool of resources, e.g. running 10 small instances of the `ShipmentService` behind an AWS load balancer
   - pros
     - high availability
   - cons
     - complexity: you need a load balancer and a service discovery
     - consistency: it becomes harder to keep data synchronized across multiple nodes
 
-### 21. Tell me about your experience with Cloud Service. Ex. AWS, GCP, Azure
+## 21. Tell me about your experience with Cloud Service. Ex. AWS, GCP, Azure
 
 - IAM (RBAC):
   - I don't give the entire EC2 node permission to S3, I create a specific IAM role for the `ShipmentService`.
@@ -251,7 +247,7 @@ public ResponseEntity<?> approveShipment(@PathVariable String id) {
   - For team collaboration, I organize users into groups and attach policies to groups.
 -RDS:
   - I use it for relational database, with MySQL or PostgreSQL.
-  - For production, I enable Multi-AZ. AWS automatically maintains a sync standby replica in a different availability zone. 
+  - For production, I enable Multi-AZ. AWS automatically maintains a sync standby replica in a different availability zone.
   - I offload Read traffic to a Read replica, keeping the primary db free to Write operations.
   - I configure a 7-day retention period for Point-In-Time recovery.
 - S3:
@@ -287,7 +283,7 @@ S3 (Simple Storage Service) components:
 - object (file)
   - key: unique identifier within the bucket, name of the object
   - value: data content made up of bytes
-  - version ID (optional): object versioning can be enabled at bucket level. if enabled, every version of the object will be assigned a version ID.
+  - version ID (optional): object versioning can be enabled at bucket level. If enabled, every version of the object will be assigned a version ID.
   - metadata, e.g. last modified date
 
 S3 security:
@@ -303,7 +299,7 @@ S3 security:
     - SSE-KMS: offers an additional layer of control along with audit trail, showing when and by whom keys were used
     - SSE-C (customer provided keys): users manage their own encryption keys, S3 manages the encryption as it writes to disks and decryption as you access your objects
 
-### 22. What is Kafka? What is Kafka Stream?
+## 22. What is Kafka? What is Kafka Stream?
 
 It's a distributed event streaming platform, allows you to publish, subscribe to, store, and process streams of records in real-time.
 
@@ -311,7 +307,7 @@ It's a distributed event streaming platform, allows you to publish, subscribe to
 - persistence: unlike RabbitMQ, Kafka doesn't delete messages once they are read. It keeps them for a set period (usually 7 days), allows different services to replay the data.
 - topics & partitions: data is organized into topics. A topic is splitted into partitions across different brokers.
 
-#### Kafka core components
+### Kafka core components
 
 - **producer**
 - **consumer**
@@ -335,7 +331,7 @@ It's a distributed event streaming platform, allows you to publish, subscribe to
     - immutability
     - retention period: can define a TTL of messages
 
-#### Journey of a message in Kafka
+### Journey of a message in Kafka
 
 - producer publishes a message to topic(s): producer decides which partition the message goes to, the decision happens on the client side before sending
 - broker stores the message in a log and assigns each message an offset for replay. Multiple consumers can consume the same log sequence in different time.
@@ -348,7 +344,7 @@ It's a distributed event streaming platform, allows you to publish, subscribe to
 One broker acts as the group coordinator, managing membership and triggering rebalances.
 Different consumer groups (e.g. `BillingService` and `AnalyticsService`) can consume the same topic without affecting each other.
 
-#### How to ensure you consume all messages in Kafka without message loss
+### How to ensure you consume all messages in Kafka without message loss
 
 - enable ACK (ack=all): messages are committed only after replicated to all in-sync replicas
 - use Durable Storage: Kafka persists messages on the disk, preventing loss due to broker failure
@@ -357,7 +353,7 @@ Different consumer groups (e.g. `BillingService` and `AnalyticsService`) can con
 - handle consumer failures with consumer group: Kafka rebalances partitions to ensure continuing consumption
 - set proper retention policies: prevent premature message deletion before consumption
 
-#### Kafka Streams
+### Kafka Streams
 
 Kafka Streams is a client library for building apps and microservices where the input and output data are stored in Kafka clusters. It allows you to perform complex processing on the data.
 
@@ -370,19 +366,19 @@ Capabilities:
 
 Kafka is the storage and transportation layer, Kafka Streams is the brain that processes data.
 
-#### Kafka vs. RabbitMQ
+### Kafka vs. RabbitMQ
 
 - partitioned architecture: Kafka distributes messages across partitions, enabling parallel processing and horizontal scaling. RabbitMQ uses queues, which can be bottlenecks.
 - consumer parallelism: Kafka consumers within a group can read from multiple partitions concurrently, improving throughput. RabbitMQ limits each message to one consumer at a time per queue.
 - high throughput: Kafka handles millions of messages per second, optimized for event streaming, while RabbitMQ is designed for low-latency messaging.
 
-### 23. What is ELK?
+## 23. What is ELK?
 
 It's a stack consists of Elasticsearch, Logstash, and Kibana, allows you to take data from any source, in any format, and then search, analyze and visualize the data in real-time.
 
-- Elasticsearch: a NoSQL db, acts as the storage and search engine. it's horizontally scalable and incredibly fast at full-text searches, e.g. search for an Order ID across millions of logs in ms.
-- Logstash: a server-side data-processing pipeline, acts as ingestion engine. it collects data from different sources (like microservices), transforms it (e.g. parsing a raw string into structured JSON) and sends it to Elasticsearch.
-- Kibana: a visualization tool, acts as user interface. it alllows you to create dashboards, line graphs, pie charts.
+- Elasticsearch: a NoSQL db, acts as the storage and search engine. It's horizontally scalable and incredibly fast at full-text searches, e.g. search for an Order ID across millions of logs in ms.
+- Logstash: a server-side data-processing pipeline, acts as ingestion engine. It collects data from different sources (like microservices), transforms it (e.g. parsing a raw string into structured JSON) and sends it to Elasticsearch.
+- Kibana: a visualization tool, acts as user interface. It alllows you to create dashboards, line graphs, pie charts.
 
 Why need them: without ELK, you have to manually SSH into 10 different Docker containers to find the logs. With ELK:
 
@@ -390,7 +386,7 @@ Why need them: without ELK, you have to manually SSH into 10 different Docker co
 - correlation: you can use a Trace ID to see the logs from the Gateway, and the following services all in one screen, ordered by time.
 - monitoring: you can set up alerts: if Kibana sees the word “Critical” more than 5 times in a min, it can trigger a Slack notif.
 
-### 24. Explain distributed database management (2-phase commit, SAGA)
+## 24. Explain distributed database management (2-phase commit, SAGA)
 
 Distributed transaction: a set of operations across multiple databases or services that must succeed or fail as a single unit.
 
@@ -422,7 +418,7 @@ SAGA design pattern: provide transaction management through a sequence of local 
   - complexity: must write code for both forward and compensate logic
   - eventual consistency: users might see intermediate states
 
-### 25. What is Event-Driven development?
+## 25. What is Event-Driven development?
 
 It's a software design pattern where the flow of the program is determined by events (significant changes in states).
 
@@ -439,7 +435,7 @@ Key characteristics:
 - loose coupling: the producer has zero knowledge of consumer
 - real-time responsiveness: the system reacts to events as they occur
 
-### 26. How do you use SAGA to achieve transaction management in a distributed system?
+## 26. How do you use SAGA to achieve transaction management in a distributed system?
 
 - **orchestration-based:** a single orchestrator is responsible for managing the overall transaction status
   - need to define the appropriate compensating transactions to proceed with this pattern
@@ -463,7 +459,7 @@ Key characteristics:
     - logic is fragmented for both forward and compensation flow
   - use case: fewer services, simple flow, loose coupling > clarity
 
-### 27. Explain the components needed when designing a Microservices application.
+## 27. Explain the components needed when designing a Microservices application.
 
 - client: frontend, only knows one address
 - API gateway: handles routing, protocol translation (REST to gRPC), and entry-level security
