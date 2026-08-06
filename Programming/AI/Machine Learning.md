@@ -459,3 +459,44 @@ $$
 w_j = w_j - \alpha[\frac{1}{m}\sum_{i=1}^m(f_{\vec{w},b}(\vec{x}^{(i)}) - y^{(i)})x_j^{(i)} + \frac{\lambda}{m}w_j] \\
 b = b - \alpha\frac{1}{m}\sum_{i=1}^m(f_{\vec{w},b}(\vec{x}^{(i)}) - y^{(i)})
 $$
+
+## Advanced Learning Algorithms
+
+The artificial neural network uses a very simplified mathematical model of what a biological neuron does.
+
+Activation: (comes from biological neurons) the degree that the biological neuron is sending a high output value to downstream neurons.
+
+$$
+a_j^{[l]} = g(\vec{w}_j^{[l]}\cdot\vec{a}^{[l-1]} + b_j^{[l]})
+$$
+
+(Denote `\vec{x} = \vec{a}^{[0]}` for convenience.)
+
+Questions to ask for neural network architecture:
+
+- how many hidden layers
+- how many neurons on each hidden layer
+
+Propagating the activations of neurons is called **forward propagation**.
+
+Implement a logistic neuron by adding a sigmoid activation:
+
+```python
+import tensorflow as tf
+from tensorflow.keras import Sequential
+
+# Creates a Tensowflow model that contains the logistic layer
+model = Sequential(
+  [
+    tf.keras.layers.Dense(1, input_dim=1, activation='sigmoid', name='L1')
+  ]
+)
+
+# Shows the layers and number of parameters in the model
+model.summary()
+
+logistic_layer = model.get_layer('L1')
+w, b = logistic_layer.get_weights()
+print(w, b)
+print(w.shape, b.shape)
+```
