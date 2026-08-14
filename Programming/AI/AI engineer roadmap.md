@@ -177,3 +177,48 @@ Questions:
 - **route explanation:** Instead of "Route #18", explain "Robot 3 was selected because it has 70% battery, is 500 meters away, and avoids a temporary road closure".
 - **predictive maintenance:** Collect robot logs, train a model predicting battery degradation, motor failures, and maintenance windows.
 - **AI operations dashboard:** Instead of only monitoring robots, summarize operational events like "3 robots are delayed because of road congestion".
+
+## Interview Questions Bank
+
+### DeepSeek
+
+- Round 1: enterprise knowledge base & agent projects
+  - session memory
+    - MessageWindow or TokenWindow? Why?
+    - When persisting sessions in Redis, how do you determine the session expiration policy?
+    - Have you encountered concurrent-session conflicts? How did you handle them?
+  - Long-term memory
+    - When using a vector database to store long-term memories, have you encountered a situation where the amount of stored memory keeps growing and retrieval becomes less accurate? How did you optimize it in production?
+    - What is your fallback strategy when the context exceeds the model's token limit?
+  - Cost
+    - What is the average daily token cost per user?
+    - How would you control costs at million-level traffic?
+    - Have you implemented request interception/rate limiting? For example, how would you prevent users from maliciously submitting extremely long text to drive up costs?
+  - Model selection
+    - Why did you choose a base model for this scenario instead of a fine-tuned model?
+    - What data did you use to make the model selection decision?
+  - Production troubleshooting
+    - What piece of logic did you change, and by what percentage did it improve the results?
+- Round 2: design an enterprise-grade agent system from scratch
+  - Overall system architecture
+    - How would you design the overall system architecture?
+    - How would you divide the system into modules?
+    - What are the responsibilities of each module, what does each module depend on, and how do they communicate with each other?
+    - How would you decouple the tool layer, memory layer, and orchestration/scheduling layer?
+  - Intelligent task decomposition and orchestration
+    - How do you distinguish between a simple single-tool task and a complex multi-step task?
+    - How do you automatically decompose a complex requirement into an execution plan? How do you determine the appropriate granularity of decomposition?
+    - How do you maintain contextual consistency across multiple steps of a task?
+  - Failure retry & fault tolerance (important)
+    - How do you determine whether a tool call has failed?
+    - If one step of a task fails midway, how do you determine whether to retry, roll back, or re-plan? What are the respective triggering conditions?
+  - Multi-tool orchestration & risk control
+    - How do different tools, e.g. online search, keyword search, and code parsing, work together?
+    - How do you manage permissions for tool calls?
+    - How do you prevent users from using an agent to perform unauthorized operations?
+- Round 3: understanding of the agent industry
+  - Why are you committed to pursuing the agent space? Do you think it is a short-term trend or a long-term direction? What are the areas where agents will have long-term practical applications?
+  - Over the next 1-3 years, what do you think will be the biggest bottleneck for large-scale agent adoption, models or engineering?
+  - What is fundamentally different about your agent project compared with open-source demos available online?
+  - What is your irreplaceable competitive advantage?
+  - Which will achieve large-scale adoption first, B2B or B2C agents? Why?
