@@ -16,16 +16,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        # Reads the pinned version from the packageManager field in package.json
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: 24
+          cache: pnpm
 
       - name: Install dependencies
-        run: bun install
+        run: pnpm install --frozen-lockfile
 
       - name: Build Astro
-        run: bun run build
+        run: pnpm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

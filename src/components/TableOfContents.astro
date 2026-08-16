@@ -1,11 +1,23 @@
 ---
+interface TocHeading {
+    depth: number;
+    slug: string;
+    text: string;
+    children: TocHeading[];
+}
+
+interface Props {
+    headings: TocHeading[];
+    isRoot?: boolean;
+}
+
 const { headings, isRoot = true } = Astro.props;
 
-let toc = headings;
+let toc: TocHeading[] = headings;
 
 if (isRoot) {
     toc = [];
-    const parentStack = [];
+    const parentStack: TocHeading[] = [];
 
     headings.forEach((h) => {
         const heading = { ...h, children: [] };
