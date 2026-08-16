@@ -1,0 +1,57 @@
+---
+import FormattedDate from "../components/FormattedDate.astro";
+import Icon from "../components/Icon.astro";
+import Layout from "../layouts/Layout.astro";
+import { withBase } from "../utils/urls";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("blog")).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const byYear = new Map<string, typeof posts>();
+for (const post of posts) {
+  const year = post.data.pubDate.getFullYear().toString();
+  if (!byYear.has(year)) byYear.set(year, []);
+  byYear.get(year)!.push(post);
+}
+---
+
+<Layout title="Archives | Sirius" description="Archive of all posts.">
+  <article>
+    <div>
+      <h1 class="page-title text-foreground/60 font-sans text-xl md:text-3xl font-extrabold">
+        <span class="inline-flex items-center gap-2">
+          <Icon name="archive" class="shrink-0" />
+          Archives
+        </span>
+      </h1>
+    </div>
+    <div class="categories-list">
+      {
+        [...byYear.entries()].map(([year, yearPosts]) => (
+          <div class="category-item pt-4 px-2">
+            <div class="inline-flex items-center gap-2 justify-between w-full">
+              <h2 class="year my-2 text-2xl font-bold">{year}</h2>
+              <span class="shrink-0 badge badge-primary font-sans !text-xs">{yearPosts.length}</span>
+            </div>
+            <div class="posts-list-plain px-2 text-sm">
+              <ul class="list-disc list-inside marker:text-primary">
+                {yearPosts.map((post) => (
+                  <li class="flex items-baseline gap-2">
+                    <a class="smooth-underline truncate" href={withBase(`/blog/${post.id}/`)}>
+                      <span>{post.data.title}</span>
+                    </a>
+                    <time class="ml-auto shrink-0 text-foreground/60 font-sans">
+                      <FormattedDate date={post.data.pubDate} />
+                    </time>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </article>
+</Layout>

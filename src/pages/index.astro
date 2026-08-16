@@ -1,37 +1,60 @@
 ---
-import BaseHead from "../components/BaseHead.astro";
-import Footer from "../components/Footer.astro";
-import Header from "../components/Header.astro";
-import SocialIcon from "../components/SocialIcon.astro";
-import { SITE_AUTHOR, SITE_DESCRIPTION, SITE_SIGNATURE, SITE_TITLE, SOCIAL_LINKS } from "../consts";
+import FormattedDate from "../components/FormattedDate.astro";
+import Icon from "../components/Icon.astro";
+import { SITE_DESCRIPTION, SITE_SIGNATURE, SITE_TITLE } from "../consts";
+import Layout from "../layouts/Layout.astro";
+import { withBase } from "../utils/urls";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("blog")).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
 ---
 
-<!doctype html>
-<html lang="en">
-    <head>
-        <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-    </head>
-    <body class="flex flex-col min-h-screen">
-        <Header />
-        <main class="flex flex-col grow justify-center items-center">
-            <h1 class="site-title text-skin-accent-dark">{SITE_AUTHOR}</h1>
-            <p class="text-skin-accent-dark font-sans">{SITE_SIGNATURE}</p>
-            <div class="social-links flex justify-content p-3 gap-2">
-                {
-                    SOCIAL_LINKS.map((link) => (
-                        <a
-                            href={link.url}
-                            title={link.label}
-                            class="text-skin-accent-dark hover:text-skin-accent transition-colors duration-200"
-                        >
-                            <span class="sr-only">{link.label}</span>{" "}
-                            <SocialIcon platform={link.name} />
-                        </a>
-                    ))
-                }
-            </div>
-            <slot />
-        </main>
-        <Footer />
-    </body>
-</html>
+<Layout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+  <div class="profile markdown-body is-detailed mb-4">
+    <div class="text-right">
+      <h1 class="font-lxgw inline-flex items-center gap-1">
+        {SITE_TITLE}
+        <Icon name="drink" />
+      </h1>
+      <div class="font-lxgw">{SITE_SIGNATURE}</div>
+    </div>
+  </div>
+
+  <div class="posts-list flex flex-col">
+    {
+      posts.map((post) => (
+        <article class="clickable post-with-excerpt p-2 md:p-4 border-b border-background-border">
+          <h2 class="post-title mt-4 mb-2 text-lg md:text-xl font-bold">
+            <a class="smooth-underline" href={withBase(`/blog/${post.id}/`)}>
+              <span>{post.data.title}</span>
+            </a>
+          </h2>
+          <div class="excerpt markdown-body text-sm md:text-base">
+            <p>{post.data.description}</p>
+          </div>
+          <div class="post-meta font-sans text-sm w-full text-foreground/70 mb-4">
+            <p class="flex flex-wrap items-center gap-2">
+              <span class="date flex gap-1 items-center shrink-0">
+                <Icon name="calendar" />
+                <time>
+                  <FormattedDate date={post.data.pubDate} />
+                </time>
+              </span>
+              <span class="flex flex-wrap max-w-full overflow-hidden text-ellipsis gap-2">
+                {post.data.tags.map((tag) => (
+                  <a class="tag flex items-center gap-1 smooth-underline truncate" href={withBase("/tags/")}>
+                    <Icon name="tag-single" class="shrink-0" />
+                    <span class="truncate">{tag}</span>
+                  </a>
+                ))}
+              </span>
+            </p>
+          </div>
+          <a class="clickable-bkg-link" href={withBase(`/blog/${post.id}/`)} aria-label={post.data.title} />
+        </article>
+      ))
+    }
+  </div>
+</Layout>

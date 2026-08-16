@@ -1,0 +1,58 @@
+---
+import Icon from "../components/Icon.astro";
+import Layout from "../layouts/Layout.astro";
+import { withBase } from "../utils/urls";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("blog")).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const byTag = new Map<string, typeof posts>();
+for (const post of posts) {
+  for (const tag of post.data.tags) {
+    if (!byTag.has(tag)) byTag.set(tag, []);
+    byTag.get(tag)!.push(post);
+  }
+}
+const tags = [...byTag.entries()].sort((a, b) => b[1].length - a[1].length);
+---
+
+<Layout title="Tags | Sirius" description="All posts grouped by tag.">
+  <article>
+    <div>
+      <h1 class="page-title text-foreground/60 font-sans text-xl md:text-3xl font-extrabold">
+        <span class="inline-flex items-center gap-2">
+          <Icon name="tag" class="shrink-0" />
+          Tags
+        </span>
+      </h1>
+    </div>
+    <div class="categories-list">
+      {
+        tags.map(([tag, tagPosts]) => (
+          <div class="clickable category-item pt-4 px-2">
+            <div class="inline-flex items-center gap-2 justify-between w-full">
+              <h2 class="text-lg font-bold inline-flex items-center gap-1">
+                <Icon name="tag-single" class="shrink-0" />
+                <span>{tag}</span>
+              </h2>
+              <span class="shrink-0 badge badge-primary font-sans !text-xs">{tagPosts.length}</span>
+            </div>
+            <div class="posts-list-plain px-2 text-sm">
+              <ul class="list-disc list-inside marker:text-primary">
+                {tagPosts.map((post) => (
+                  <li class="truncate">
+                    <a class="smooth-underline" href={withBase(`/blog/${post.id}/`)}>
+                      <span>{post.data.title}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </article>
+</Layout>

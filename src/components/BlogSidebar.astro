@@ -1,0 +1,138 @@
+---
+import { getCollection } from "astro:content";
+import Icon from "./Icon.astro";
+import { withBase } from "../utils/urls";
+
+const posts = (await getCollection("blog")).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+const recent = posts.slice(0, 5);
+
+const tagCount = new Map<string, number>();
+for (const p of posts) {
+  for (const t of p.data.tags) tagCount.set(t, (tagCount.get(t) ?? 0) + 1);
+}
+const maxTagCount = Math.max(1, ...tagCount.values());
+const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
+---
+
+<blog-sidebar
+  class="print:hidden max-md:fixed max-md:translate-y-full max-md:max-h-[90dvh] max-md:w-screen max-md:bottom-0 max-md:z-10 max-md:flex transition-all duration-300 max-md:[body.show-toc_&]:translate-y-0"
+>
+  <!-- Sidebar accents use the secondary color instead of primary -->
+  <div
+    class="sidebar__inner-container sticky top-0 lg:pt-6 bg-background w-full md:pr-4 md:h-screen max-md:p-2 max-md:border-t max-md:border-background-border overflow-y-auto flex flex-col gap-8"
+    style="--theme-color-primary: var(--theme-color-secondary);"
+  >
+    <sidebar-search
+      class="font-sans w-full p-2 flex items-center gap-2 border border-background-border bg-background-container hover:border-primary/60 transition-colors"
+    >
+      <Icon name="search" class="opacity-50" />
+      <input
+        id="sidebar-search-input"
+        name="search-input"
+        aria-label="Search"
+        class="border-none outline-none grow bg-transparent"
+        type="text"
+        placeholder="Search anything..."
+      />
+    </sidebar-search>
+    <div id="sidebar-search-results" class="hidden font-sans text-sm"></div>
+
+    <slot />
+
+    <div class="font-sans">
+      <span class="inline-flex items-center gap-1 text-sm opacity-60 pb-1">
+        <Icon name="clock" class="shrink-0" />
+        <span>Recent Posts</span>
+      </span>
+      <div class="posts-list-plain text-foreground/70">
+        <ul class="list-disc list-inside marker:text-primary">
+          {
+            recent.map((post) => (
+              <li class="truncate">
+                <a class="smooth-underline" href={withBase(`/blog/${post.id}/`)}>
+                  <span>{post.data.title}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
+    <div class="font-sans">
+      <span class="inline-flex items-center gap-1 text-sm opacity-60 pb-1">
+        <Icon name="tag" class="shrink-0" />
+        <span>Tags</span>
+      </span>
+      <div class="flex flex-wrap gap-2">
+        {
+          tags.map(([tag, count]) => (
+            <a
+              class="sidebar-badge text-xs text-foreground/70 px-1 py-0.5 underline underline-offset-4"
+              href={withBase(`/tags/`)}
+              style={`--percentage: ${Math.round(20 + (60 * count) / maxTagCount)}%`}
+            >
+              {tag}
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</blog-sidebar>
+
+<script>
+  const input = document.getElementById("sidebar-search-input") as HTMLInputElement | null;
+  const results = document.getElementById("sidebar-search-results");
+
+  if (input && results) {
+    let index: { title: string; slug: string; description: string; tags: string[]; body: string }[] | null =
+      null;
+    const base = import.meta.env.BASE_URL;
+
+    const loadIndex = async () => {
+      if (index) return index;
+      const res = await fetch(`${base}/search.json`.replace(/\/+/g, "/"));
+      index = await res.json();
+      return index;
+    };
+
+    const render = (hits: { title: string; slug: string }[]) => {
+      if (hits.length === 0) {
+        results!.innerHTML = `<p class="opacity-60 px-2">No results.</p>`;
+        return;
+      }
+      results!.innerHTML = `<ul class="list-disc list-inside marker:text-primary text-foreground/70">${hits
+        .map(
+          (h) =>
+            `<li class="truncate"><a class="smooth-underline" href="${base}/blog/${h.slug}/">${h.title}</a></li>`,
+        )
+        .join("")}</ul>`;
+    };
+
+    let debounce: ReturnType<typeof setTimeout> | undefined;
+    input.addEventListener("input", async () => {
+      clearTimeout(debounce);
+      const q = input.value.trim().toLowerCase();
+      if (!q) {
+        results!.classList.add("hidden");
+        return;
+      }
+      debounce = setTimeout(async () => {
+        const data = await loadIndex();
+        if (!data) return;
+        const hits = data
+          .filter((p) =>
+            (p.title + " " + p.description + " " + p.tags.join(" ") + " " + p.body)
+              .toLowerCase()
+              .includes(q),
+          )
+          .slice(0, 8);
+        render(hits);
+        results!.classList.remove("hidden");
+      }, 150);
+    });
+  }
+</script>

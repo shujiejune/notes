@@ -1,10 +1,29 @@
 ---
-const today = new Date();
+import { getCollection } from "astro:content";
+import { SITE_AUTHOR } from "../consts";
+
+const posts = await getCollection("blog");
+const dates = posts.map((p) => p.data.pubDate.valueOf()).filter(Boolean);
+const firstDate = dates.length ? Math.min(...dates) : Date.now();
+const days = Math.max(0, Math.floor((Date.now() - firstDate) / 86_400_000));
+const totalChars = posts.reduce((n, p) => n + (p.body?.length ?? 0), 0);
+const year = new Date().getFullYear();
 ---
 
-<footer class="py-8 px-4 border-t border-skin-line text-sm opacity-70">
-    <div class="max-w-5xl mx-auto text-center">
-        <span class="text-skin-accent">&copy; </span>
-        {today.getFullYear()} Sirius. All rights reserved.
-    </div>
+<footer>
+  <div class="text-center mb-4 markdown-body font-sans !text-xs">
+    <p>&copy; {year} {SITE_AUTHOR}. All rights reserved.</p>
+    <p>
+      开业 <span>{days}</span> 天里，写下了 {posts.length} 篇博客，{totalChars} 字符。
+    </p>
+    <p>
+      Powered by
+      <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a> and a UI
+      replica of
+      <a
+        href="https://github.com/Lhcfl/astro-theme-krypton2"
+        target="_blank"
+        rel="noopener noreferrer">Krypton 2</a>.
+    </p>
+  </div>
 </footer>

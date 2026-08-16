@@ -1,111 +1,159 @@
 ---
-import Portfolio from "@layouts/Portfolio.astro";
+import Icon from "../components/Icon.astro";
+import Layout from "../layouts/Layout.astro";
 import type { Project } from "@objects/types";
 
 const projects: Project[] = [
-    {
-        id: 1,
-        title: "Logistics as a Service",
-        description: "Distributed logistics engine for automated vehicle dispatch and delivery.",
-        techStack: {
-            backend: ["Go", "gRPC", "PostgreSQL"],
-            misc: ["Apache Pimsular", "WebSockets"],
-            devOps: ["Docker"],
-        },
-        githubUrl: "https://github.com/shujiejune/Circuit-grpc",
+  {
+    id: 1,
+    title: "Logistics as a Service",
+    description: "Distributed logistics engine for automated vehicle dispatch and delivery.",
+    techStack: {
+      backend: ["Go", "gRPC", "PostgreSQL"],
+      misc: ["Apache Pimsular", "WebSockets"],
+      devOps: ["Docker"],
     },
-    {
-        id: 2,
-        title: "HR Onboarding Portal",
-        description:
-            "Enterprise portal utilizing event-driven architecture for secure employee onboarding.",
-        techStack: {
-            frontend: ["React", "Redux"],
-            backend: ["Java", "Spring Boot", "MySQL", "MongoDB"],
-            misc: ["Kafka", "Netflix Eureka", "Microservices"],
-            devOps: ["AWS S3", "Docker"],
-        },
-        githubUrl: "https://github.com/HROS-Team-4",
+    githubUrl: "https://github.com/shujiejune/Circuit-grpc",
+  },
+  {
+    id: 2,
+    title: "HR Onboarding Portal",
+    description:
+      "Enterprise portal utilizing event-driven architecture for secure employee onboarding.",
+    techStack: {
+      frontend: ["React", "Redux"],
+      backend: ["Java", "Spring Boot", "MySQL", "MongoDB"],
+      misc: ["Kafka", "Netflix Eureka", "Microservices"],
+      devOps: ["AWS S3", "Docker"],
     },
-    {
-        id: 3,
-        title: "People AI",
-        description: "RAG-capable AI agent with optimized TTS endpoints reaching 6000+ RPS.",
-        techStack: {
-            frontend: ["React"],
-            backend: ["Node.js", "Express.js"],
-            misc: ["OpenAI API", "Langchain", "Text to Speech"],
-        },
-        githubUrl: "https://github.com/shujiejune/people-ai",
-        demoUrl: "https://youtu.be/N8OuVZXA4hk?si=qdF2KezyS615KQIV",
+    githubUrl: "https://github.com/HROS-Team-4",
+  },
+  {
+    id: 3,
+    title: "People AI",
+    description: "RAG-capable AI agent with optimized TTS endpoints reaching 6000+ RPS.",
+    techStack: {
+      frontend: ["React"],
+      backend: ["Node.js", "Express.js"],
+      misc: ["OpenAI API", "Langchain", "Text to Speech"],
     },
-    {
-        id: 4,
-        title: "Fracture Run",
-        description: "3D endless runner game with shooting mechanics.",
-        techStack: {
-            backend: ["C#", "Python"],
-            misc: ["Unity"],
-        },
-        githubUrl: "https://github.com/shujiejune/fracture-run",
-        demoUrl: "https://shujiejune.github.io/fracture-run-build/",
+    githubUrl: "https://github.com/shujiejune/people-ai",
+    demoUrl: "https://youtu.be/N8OuVZXA4hk?si=qdF2KezyS615KQIV",
+  },
+  {
+    id: 4,
+    title: "Fracture Run",
+    description: "3D endless runner game with shooting mechanics.",
+    techStack: {
+      backend: ["C#", "Python"],
+      misc: ["Unity"],
     },
-    {
-        id: 5,
-        title: "MiniSpotify",
-        description: "An audio streaming mobile application.",
-        techStack: {
-            frontend: ["Kotlin", "Android"],
-            backend: ["Kotlin", "Android Jetpack", "Room"],
-            misc: ["MVVM"],
-        },
-        githubUrl: {
-            frontend: "https://github.com/shujiejune/mini-spotify-android",
-            backend: "https://github.com/shujiejune/mini-spotify-backend",
-        },
+    githubUrl: "https://github.com/shujiejune/fracture-run",
+    demoUrl: "https://shujiejune.github.io/fracture-run-build/",
+  },
+  {
+    id: 5,
+    title: "MiniSpotify",
+    description: "An audio streaming mobile application.",
+    techStack: {
+      frontend: ["Kotlin", "Android"],
+      backend: ["Kotlin", "Android Jetpack", "Room"],
+      misc: ["MVVM"],
     },
-    {
-        id: 6,
-        title: "Jingdezhen Ceramics",
-        description: "An educational and social platform for ceramic enthusiasts.",
-        techStack: {
-            frontend: ["TanStack", "Solid.js"],
-            backend: ["Go", "Fiber", "WebSockets", "PostgreSQL"],
-        },
-        githubUrl: {
-            frontend: "https://github.com/shujiejune/jingdezhen-ceramics-frontend",
-            backend: "https://github.com/shujiejune/jingdezhen-ceramics-backend",
-        },
+    githubUrl: {
+      frontend: "https://github.com/shujiejune/mini-spotify-android",
+      backend: "https://github.com/shujiejune/mini-spotify-backend",
     },
-    {
-        id: 7,
-        title: "E-Commerce",
-        description: "An e-commerce platform for selling products.",
-        techStack: {
-            frontend: ["Angular", "TypeScript"],
-            backend: ["Java", "Spring Boot", "MariaDB"],
-        },
-        githubUrl: {
-            frontend: "https://github.com/shujiejune/online-shopping-angular",
-            backend: "https://github.com/shujiejune/online-shopping-spring",
-        },
-        demoUrl: "https://youtu.be/nkS-z7LXrI0?si=RkDughAbKyYVMrIE",
+  },
+  {
+    id: 6,
+    title: "Jingdezhen Ceramics",
+    description: "An educational and social platform for ceramic enthusiasts.",
+    techStack: {
+      frontend: ["TanStack", "Solid.js"],
+      backend: ["Go", "Fiber", "WebSockets", "PostgreSQL"],
     },
-    {
-        id: 8,
-        title: "Groce Wise",
-        description: "A cross-platform price comparison app for shopping groceries.",
-        techStack: {
-            frontend: ["Flutter"],
-            backend: ["Go", "Gin"],
-            misc: ["Machine Learning", "PostgreSQL", "RESTful API"],
-        },
-        githubUrl: {
-            frontend: "https://github.com/Sparsh-Prabhakar/GroceWise-Flutter",
-            backend: "https://github.com/Sparsh-Prabhakar/GroceWise-Go",
-        },
+    githubUrl: {
+      frontend: "https://github.com/shujiejune/jingdezhen-ceramics-frontend",
+      backend: "https://github.com/shujiejune/jingdezhen-ceramics-backend",
     },
+  },
+  {
+    id: 7,
+    title: "E-Commerce",
+    description: "An e-commerce platform for selling products.",
+    techStack: {
+      frontend: ["Angular", "TypeScript"],
+      backend: ["Java", "Spring Boot", "MariaDB"],
+    },
+    githubUrl: {
+      frontend: "https://github.com/shujiejune/online-shopping-angular",
+      backend: "https://github.com/shujiejune/online-shopping-spring",
+    },
+    demoUrl: "https://youtu.be/nkS-z7LXrI0?si=RkDughAbKyYVMrIE",
+  },
+  {
+    id: 8,
+    title: "Groce Wise",
+    description: "A cross-platform price comparison app for shopping groceries.",
+    techStack: {
+      frontend: ["Flutter"],
+      backend: ["Go", "Gin"],
+      misc: ["Machine Learning", "PostgreSQL", "RESTful API"],
+    },
+    githubUrl: {
+      frontend: "https://github.com/Sparsh-Prabhakar/GroceWise-Flutter",
+      backend: "https://github.com/Sparsh-Prabhakar/GroceWise-Go",
+    },
+  },
 ];
+
+const allTech = (p: Project) => Object.values(p.techStack ?? {}).flat();
+const ghLinks = (url: Project["githubUrl"]) =>
+  typeof url === "string" ? [{ label: "GitHub", url }] : Object.entries(url ?? {}).map(([k, v]) => ({ label: `GitHub (${k})`, url: v }));
 ---
 
-<Portfolio projects={projects} />
+<Layout title="Projects | Sirius" description="Things I have built.">
+  <article>
+    <div>
+      <h1 class="page-title text-foreground/60 font-sans text-xl md:text-3xl font-extrabold">
+        <span class="inline-flex items-center gap-2">
+          <Icon name="notebook" class="shrink-0" />
+          Projects
+        </span>
+      </h1>
+    </div>
+
+    <div class="posts-list flex flex-col mt-4">
+      {
+        projects.map((project) => (
+          <article class="clickable p-2 md:p-4 border-b border-background-border">
+            <h2 class="post-title mt-4 mb-2 text-lg md:text-xl font-bold">{project.title}</h2>
+            <div class="markdown-body text-sm md:text-base">
+              <p>{project.description}</p>
+              <p class="flex flex-wrap gap-2 font-sans">
+                {allTech(project).map((tech) => (
+                  <span class="badge badge-primary !text-xs">{tech}</span>
+                ))}
+              </p>
+            </div>
+            <div class="post-meta font-sans text-sm text-foreground/70 mb-4 flex gap-4">
+              {ghLinks(project.githubUrl).map((l) => (
+                <a class="tag flex items-center gap-1 smooth-underline" href={l.url}>
+                  <Icon name="link" class="shrink-0" />
+                  <span>{l.label}</span>
+                </a>
+              ))}
+              {project.demoUrl && (
+                <a class="tag flex items-center gap-1 smooth-underline" href={project.demoUrl}>
+                  <Icon name="web" class="shrink-0" />
+                  <span>Demo</span>
+                </a>
+              )}
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </article>
+</Layout>

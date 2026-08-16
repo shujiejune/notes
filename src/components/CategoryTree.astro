@@ -1,0 +1,52 @@
+---
+import Icon from "./Icon.astro";
+import { withBase } from "../utils/urls";
+
+export interface TreePost {
+  slug: string;
+  title: string;
+}
+
+export interface TreeNode {
+  name: string;
+  children: TreeNode[];
+  posts: TreePost[];
+}
+
+interface Props {
+  node: TreeNode;
+  depth?: number;
+}
+
+const { node, depth = 0 } = Astro.props;
+
+function countPosts(n: TreeNode): number {
+  return n.posts.length + n.children.reduce((sum, c) => sum + countPosts(c), 0);
+}
+---
+
+<div class:list={["clickable category-item pt-4 px-2", depth > 0 && "ml-4 border-l border-background-border"]}>
+  <div class="inline-flex items-center gap-2 justify-between w-full">
+    <h2 class="text-lg font-bold inline-flex items-center gap-1">
+      <Icon name="folder" class="shrink-0" />
+      <span>{node.name}</span>
+    </h2>
+    <span class="shrink-0 badge badge-primary font-sans !text-xs">{countPosts(node)}</span>
+  </div>
+  {
+    node.posts.length > 0 && (
+      <div class="posts-list-plain px-2 text-sm">
+        <ul class="list-disc list-inside marker:text-primary">
+          {node.posts.map((p) => (
+            <li class="truncate">
+              <a class="smooth-underline" href={withBase(`/blog/${p.slug}/`)}>
+                <span>{p.title}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+  {node.children.map((child) => <Astro.self node={child} depth={depth + 1} />)}
+</div>

@@ -10,7 +10,7 @@ export async function GET(context) {
 		site: context.site,
 		items: posts.map((post) => ({
 			...post.data,
-			// Prefix with BASE_URL so links include the "/sirius" base path.
+			// Prefix with BASE_URL so links include the "/notes" base path.
 			link: `${import.meta.env.BASE_URL}/blog/${post.id}/`,
 		})),
 	});

@@ -15,8 +15,10 @@ type Props = CollectionEntry<"blog">;
 const post = Astro.props;
 const { Content, headings } = await render(post);
 const wordCount = calculateWordCount(post.body);
+const segments = post.id.split("/");
+const crumbs = segments.length > 1 ? segments.slice(0, -1) : [];
 ---
 
-<BlogPost {...post.data} headings={headings} wordCount={wordCount}>
+<BlogPost {...post.data} headings={headings} wordCount={wordCount} crumbs={crumbs}>
     <Content />
 </BlogPost>

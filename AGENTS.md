@@ -4,7 +4,11 @@ Guidance for AI coding agents working in this repository.
 
 ## Project Overview
 
-Sirius is a personal blog built with [Astro 7](https://docs.astro.build) (static output, no SSR/framework UI components) and Tailwind CSS v4. It is bilingual (Traditional/Simplified Chinese with an English fallback) and deploys to GitHub Pages as a project site at `https://shujiejune.github.io/sirius/` — the `site` and `base` values in `astro.config.mjs` must stay in sync with this. Requires Node.js ≥ 22.12.
+Sirius is a personal blog built with [Astro 7](https://docs.astro.build) (static output, no SSR/framework UI components) and Tailwind CSS v4. The UI is a replica of the [Krypton 2](https://github.com/Lhcfl/astro-theme-krypton2) theme (Apache-2.0): left sidebar header + main column + right sidebar in a `blog-app` CSS grid, defined in `src/styles/global.css`. It is bilingual (Traditional/Simplified Chinese with an English fallback) and deploys to GitHub Pages as a project site at `https://shujiejune.github.io/notes/` — the `site` and `base` values in `astro.config.mjs` must stay in sync with this. Requires Node.js ≥ 22.12.
+
+Markdown is processed by the unified processor (Astro 7's default is Sätteri, which doesn't support remark/rehype plugins) with remark-math + rehype-katex for `$...$` / `$$` math (display math needs the `$$` fences on their own lines) and a custom Shiki transformer (`src/plugins/rainbow-delimiters.js`) that colors paired brackets by nesting depth like rainbow-delimiters.nvim. Code blocks use dual themes (github-light/github-dark).
+
+Posts may be nested in subdirectories under `src/content/blog/` — the URL keeps the path (`/blog/<dir>/<post>/`), and `/categories` renders the directory tree. Internal links must use `withBase()` from `src/utils/urls.ts` because of the `/notes` base path (only active in production builds; `astro dev` serves from `/`).
 
 ## Commands
 

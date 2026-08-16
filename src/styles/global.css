@@ -1,168 +1,411 @@
 /*
-  The CSS in this style tag is based off of Bear Blog's default CSS.
-  https://github.com/HermanMartinus/bearblog/blob/297026a877bc2ab2b3bdfbd6b9f7961c350917dd/templates/styles/blog/default.css
-  License MIT: https://github.com/HermanMartinus/bearblog/blob/master/LICENSE.md
+  Design system replicated from the "Krypton 2" Astro theme
+  (https://github.com/Lhcfl/astro-theme-krypton2, Apache-2.0).
+  Tokens, fonts, layout grid and markdown styles mirror https://lhcfl.github.io/.
  */
 @import "tailwindcss";
-@plugin "@tailwindcss/typography";
+
+/* ------------------------------------------------------------------ */
+/* Design tokens                                                       */
+/* ------------------------------------------------------------------ */
+:root {
+  --theme-color-background: oklch(100% 0 0);
+  --theme-color-foreground: oklch(20% 0 0);
+  --theme-color-primary: oklch(60.279% 0.26611 303.088);
+  --theme-color-secondary: oklch(100% 0.4 340);
+  --theme-color-background-border: color-mix(in oklch, var(--theme-color-background) 80%, var(--theme-color-foreground) 20%);
+  --theme-color-background-container: color-mix(in oklch, var(--theme-color-background) 97%, var(--theme-color-foreground) 3%);
+
+  /* Fonts */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --latin-serif-font: "Source Serif 4", "Noto Serif";
+  --cjk-serif-fallback-font: "Source Han Serif", "Source Han Serif VF", "Noto Serif SC", "Noto Serif";
+  --cjk-serif-font: "LXGWNeoZhiSongScreen", var(--cjk-serif-fallback-font);
+  --blog-font-serif: var(--latin-serif-font), var(--cjk-serif-font), "Times New Roman", serif;
+  --blog-heading-font: var(--latin-serif-font), var(--cjk-serif-fallback-font), "Times New Roman", serif;
+  --blog-font-mono: "mononoki", "Consolas", "Menlo", "Monaco", "Lucida Console", "Courier New", "Courier", monospace;
+  --lxgw-font: "LXGW WenKai TC", "LXGW WenKai", cursive;
+  --default-font-family: var(--font-sans);
+  --default-monoFont-family: var(--blog-font-mono);
+
+  /* Layout */
+  --spacing: 0.25rem;
+  --max-main-width: 40em;
+  --header-height: calc(15 * var(--spacing));
+  --main-pt: 1.5rem;
+}
 
 @theme {
-    /* Mapping variables to Tailwind font-family utilities */
-    --font-display: "Kaushan Script", cursive;
-    --font-sans: "IBM Plex Sans", "Genryu Mincho TW", "Genryu Mincho JP", sans-serif;
-    --font-mono: "Lilex", monospace;
-
-    /* This replaces the old tailwind.config.js 'extend' section */
-    --color-skin-base: rgb(var(--color-text-base));
-    --color-skin-accent: rgb(var(--color-accent));
-    --color-skin-accent-dark: rgb(var(--color-accent-dark));
-    --color-skin-fill: rgb(var(--color-fill));
-    --color-skin-card: rgb(var(--color-card));
-    --color-skin-line: rgb(var(--color-line));
+  --color-background: var(--theme-color-background);
+  --color-foreground: var(--theme-color-foreground);
+  --color-primary: var(--theme-color-primary);
+  --color-primary-700: color-mix(in oklch, var(--theme-color-primary) 72%, black);
+  --color-secondary: var(--theme-color-secondary);
+  --color-background-border: var(--theme-color-background-border);
+  --color-background-container: var(--theme-color-background-container);
+  --font-sans: var(--font-sans);
+  --font-serif: var(--blog-font-serif);
+  --font-mono: var(--blog-font-mono);
+  --font-lxgw: var(--lxgw-font);
 }
 
-/* When the language is set to Traditional Chinese */
-:lang(zh-Hant),
-:lang(zh-TW) {
-    --font-sans: "IBM Plex Sans", "Genryu Mincho TW", sans-serif;
-}
-
-/* When the language is set to Simplified Chinese */
-:lang(zh-Hans),
-:lang(zh-CN) {
-    --font-sans: "IBM Plex Sans", "Genryu Mincho JP", sans-serif;
-}
-
-/* Site Title Font */
+/* ------------------------------------------------------------------ */
+/* Fonts                                                               */
+/* ------------------------------------------------------------------ */
 @font-face {
-    font-family: "Kaushan Script";
-    src: url("../assets/fonts/KaushanScript-Regular.woff2") format("woff2"); /* Fixed extension */
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-
-/* English or Latin Font */
-@font-face {
-    font-family: "IBM Plex Sans";
-    src: url("../assets/fonts/IBMPlexSans-VariableFont_wdth,wght.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
+  font-family: "mononoki";
+  src: url("../assets/fonts/mononoki-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
-    font-family: "IBM Plex Sans";
-    src: url("../assets/fonts/IBMPlexSans-Italic-VariableFont_wdth,wght.woff2") format("woff2");
-    font-weight: 400;
-    font-style: italic;
+  font-family: "LXGWNeoZhiSongScreen";
+  src: url("https://cdn.jsdelivr.net/gh/Lhcfl/webfonts@main/LXGWNeoZhiSongScreen.woff2") format("woff2");
+  font-display: swap;
 }
 
-/* Simplified Chinese or Japanese Font */
-@font-face {
-    font-family: "Genryu Mincho JP";
-    src: url("../assets/fonts/GenRyuMin2JP-R.woff2") format("woff2");
-    font-weight: 400;
-    font-display: swap;
-    /* Optional: use unicode-range to be explicit */
-    unicode-range: U+4E00-9FFF, U+3400-4DBF, U+3000-303F;
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+html {
+  scroll-behavior: smooth;
 }
 
-@font-face {
-    font-family: "Genryu Mincho JP";
-    src: url("../assets/fonts/GenRyuMin2JP-B.woff2") format("woff2");
-    font-weight: 700;
-    font-display: swap;
-    unicode-range: U+4E00-9FFF, U+3400-4DBF, U+3000-303F;
-}
-
-/* Traditional Chinese Font */
-@font-face {
-    font-family: "Genryu Mincho TW";
-    src: url("../assets/fonts/GenRyuMin2TW-R.woff2") format("woff2");
-    font-weight: 400;
-    font-display: swap;
-    unicode-range: U+4E00-9FFF, U+3400-4DBF, U+3000-303F;
-}
-
-@font-face {
-    font-family: "Genryu Mincho TW";
-    src: url("../assets/fonts/GenRyuMin2TW-B.woff2") format("woff2");
-    font-weight: 700;
-    font-display: swap;
-    unicode-range: U+4E00-9FFF, U+3400-4DBF, U+3000-303F;
-}
-
-/* Monospace Font */
-@font-face {
-    font-family: "Lilex";
-    src: url("../assets/fonts/LilexNerdFontMono-Regular.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: "Lilex";
-    src: url("../assets/fonts/LilexNerdFontMono-Italic.woff2") format("woff2");
-    font-weight: 400;
-    font-style: italic;
-}
-
-:root {
-    --header-padding: 1rem;
-    /* Using RGB format so Tailwind can apply opacity like /10 */
-    --color-text-base: 31, 41, 55; /* Dark Gray */
-    --color-accent: 35, 55, 255; /* Professional Blue */
-    --color-accent-dark: 0, 13, 138;
-    --color-fill: 255, 255, 255; /* White */
-    --color-card: 249, 250, 251; /* Very Light Gray */
-    --color-line: 229, 231, 235; /* Light Border */
-}
-
-/* Base Styles */
 body {
-    font-family: var(--font-sans);
-    background-color: var(--color-skin-fill);
-    color: rgb(var(--color-text-base));
-    margin: 0;
+  font-family: var(--blog-font-serif);
 }
 
-.site-title {
-    font-family: var(--font-display) !important;
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--blog-heading-font);
 }
 
-code,
-pre {
-    font-family: var(--font-mono);
-    font-size: 0.9em;
+/* ------------------------------------------------------------------ */
+/* App shell grid (header / main / footer / sidebar)                   */
+/* ------------------------------------------------------------------ */
+blog-app {
+  display: grid;
+  justify-content: center;
+  gap: min(1vw, 2em);
+  min-height: 100dvh;
+}
+blog-app > header { grid-area: header; }
+blog-app > main { grid-area: main; }
+blog-app > footer { grid-area: footer; }
+blog-app > blog-sidebar { grid-area: sidebar; }
+
+@media (width <= calc(48rem - 0.1px)) {
+  blog-app {
+    grid-template-areas: "header" "main" "footer";
+    grid-template-columns: minmax(0, var(--max-main-width));
+    grid-template-rows: var(--header-height) auto auto;
+  }
+}
+@media (width >= 48rem) and (width <= calc(64rem - 0.1px)) {
+  blog-app {
+    grid-template-areas: "header header" "main sidebar" "footer sidebar";
+    grid-template-columns: minmax(0, var(--max-main-width)) 0;
+    grid-template-rows: var(--header-height) auto auto;
+  }
+  blog-app > blog-sidebar { display: none; }
+  body.has-sidebar blog-app {
+    grid-template-columns: minmax(0, var(--max-main-width)) 30%;
+  }
+  body.has-sidebar blog-app > blog-sidebar { display: block; }
+}
+@media (width >= 64rem) {
+  blog-app {
+    grid-template-areas: "header main sidebar" "header footer sidebar";
+    grid-template-columns: minmax(10em, 20em) minmax(30em, var(--max-main-width)) minmax(10em, 20em);
+  }
 }
 
-main {
-    margin: auto;
-    padding: 3em 1em;
+/* ------------------------------------------------------------------ */
+/* Components                                                          */
+/* ------------------------------------------------------------------ */
+.avatar {
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-    margin: 0 0 0.5rem 0;
-    line-height: 1.2;
+.badge {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  padding-inline: calc(var(--spacing) * 2);
+  padding-block: calc(var(--spacing) * 0.5);
+  border-radius: 0.5rem;
 }
-h1 {
-    font-size: 3.052em;
+.badge-primary {
+  color: var(--theme-color-primary);
+  background-color: color-mix(in srgb, var(--theme-color-primary) 10%, transparent);
 }
-h2 {
-    font-size: 2.441em;
+
+/* Animated underline that grows from the center on hover */
+.smooth-underline {
+  position: relative;
 }
-h3 {
-    font-size: 1.953em;
+.smooth-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 0.15em;
+  background-color: color-mix(in srgb, var(--theme-color-primary) 70%, transparent);
+  translate: -50% var(--un-translate-y, 0);
+  scale: 0% var(--un-scale-y, 100%);
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 0.15s;
 }
-h4 {
-    font-size: 1.563em;
+.smooth-underline:hover::after {
+  translate: 0% var(--un-translate-y, 0);
+  scale: 100% var(--un-scale-y, 100%);
 }
-h5 {
-    font-size: 1.25em;
+
+/* Cards whose whole surface is clickable via a stretched link */
+.clickable {
+  position: relative;
+  transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.clickable:hover {
+  background-color: var(--theme-color-background-container);
+}
+.clickable a.clickable-bkg-link {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+}
+.clickable a:not(.clickable-bkg-link),
+.clickable button {
+  position: relative;
+  z-index: 1;
+}
+
+/* Sidebar tag cloud: color intensity driven by --percentage (usage freq) */
+.sidebar-badge {
+  --color: color-mix(in oklch, var(--theme-color-primary) var(--percentage, 10%), var(--theme-color-foreground) 5%);
+  text-decoration-color: var(--color);
+  transition: color 0.15s, background-color 0.15s;
+}
+.sidebar-badge:hover {
+  --color: color-mix(in oklch, var(--theme-color-primary) 80%, var(--theme-color-foreground) 10%);
+  color: var(--color);
+}
+
+/* ------------------------------------------------------------------ */
+/* Markdown body                                                       */
+/* ------------------------------------------------------------------ */
+.markdown-body { font-size: 14px; }
+
+.markdown-body a {
+  color: color-mix(in oklch, var(--theme-color-primary) 50%, var(--theme-color-foreground) 50%);
+  text-decoration: none;
+}
+
+.markdown-body b, .markdown-body strong { font-weight: 600; }
+
+.markdown-body a:not(.clickable-bkg-link) {
+  text-decoration: underline dotted color-mix(in oklch, var(--theme-color-primary) 70%, transparent) 0.1em;
+  text-underline-offset: 4px;
+  transition: text-decoration 0.3s;
+}
+.markdown-body a:not(.clickable-bkg-link):hover {
+  text-decoration: underline solid color-mix(in oklch, var(--theme-color-primary) 70%, transparent) 0.2em;
+}
+
+.markdown-body p { line-height: 1.7; }
+
+.markdown-body em[lang="zh"] {
+  font-style: normal;
+  text-emphasis: dot;
+  text-emphasis-position: under;
+}
+
+.markdown-body [id] { scroll-margin-top: calc(var(--header-height) + var(--main-pt)); }
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3,
+.markdown-body h4, .markdown-body h5, .markdown-body h6 {
+  margin: 2em 0 0.5em;
+  font-weight: 700;
+  line-height: 1;
+  transition: transform 0.3s;
+}
+.markdown-body h1 {
+  font-variant: small-caps;
+  margin-top: 2.5em;
+  font-size: 1.4em;
+  text-decoration: underline 1.5px double;
+}
+.markdown-body h2 { text-underline-offset: 3px; margin-top: 2em; font-size: 1.4em; }
+.markdown-body h3 { font-size: 1.15em; }
+.markdown-body h4 { font-size: 1.08em; }
+.markdown-body h5 { font-size: 1em; text-decoration: underline dotted; }
+.markdown-body h6 { font-size: 0.9em; text-decoration: underline dashed; }
+
+.markdown-body hr {
+  color: color-mix(in oklch, var(--theme-color-foreground) 40%, transparent);
+  margin: 3em 1em;
+}
+
+.markdown-body img { max-width: 100%; height: auto; }
+
+.markdown-body p, .markdown-body ul, .markdown-body ol, .markdown-body dl { margin: 0.8em 0; }
+.markdown-body dt { font-weight: 600; }
+.markdown-body dd { margin-left: 1em; }
+.markdown-body ol ol, .markdown-body ol ul,
+.markdown-body ul ol, .markdown-body ul ul { margin: 0.4em 0; }
+.markdown-body ul > li { margin-left: 1.6em; list-style: outside; }
+.markdown-body ol > li { margin-left: 1.6em; list-style: decimal; }
+
+.markdown-body > blockquote:not(:has(blockquote)) {
+  font-family: var(--latin-serif-font), var(--lxgw-font);
+  padding: 0 1em 0 2.5em;
+  position: relative;
+}
+.markdown-body > blockquote:not(:has(blockquote)) em {
+  font-synthesis: weight style small-caps position;
+  font-style: oblique;
+}
+.markdown-body > blockquote:not(:has(blockquote))::before {
+  content: "\201D";
+  opacity: 0.4;
+  font-family: "Source Serif 4";
+  font-style: normal;
+  line-height: 1;
+  position: absolute;
+  top: 1.5em;
+  left: 1em;
+  scale: 4;
+}
+.markdown-body > blockquote:has(blockquote),
+.markdown-body > blockquote:has(blockquote) blockquote {
+  border-left: 2px solid color-mix(in oklch, var(--theme-color-primary) 60%, transparent);
+  padding-left: 1em;
+}
+
+.markdown-body code {
+  font-family: var(--default-monoFont-family);
+  white-space: pre-wrap;
+  background-color: var(--theme-color-background-container);
+  padding: 2px 4px;
+  font-size: 0.9em;
+}
+
+.markdown-body pre {
+  font-family: var(--default-monoFont-family);
+  white-space: pre;
+  padding: 10px 15px;
+  overflow-x: auto;
+  background-color: var(--theme-color-background-container) !important;
+  line-height: 1.2 !important;
+  position: relative;
+}
+.markdown-body pre code {
+  white-space: pre;
+  word-wrap: normal;
+  background-color: transparent;
+  padding: 0;
+  border: none !important;
+}
+.markdown-body pre code span { text-decoration: none !important; }
+.markdown-body pre[data-language]::before {
+  content: attr(data-language);
+  opacity: 0.4;
+  position: absolute;
+  right: 2em;
+}
+.markdown-body pre::-webkit-scrollbar { height: 6px; }
+.markdown-body pre::-webkit-scrollbar-track { background: 0 0; border-radius: 3px; }
+.markdown-body pre::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--theme-color-secondary) 10%, transparent);
+  border-radius: 3px;
+  transition-property: all;
+  transition-duration: 0.15s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+.markdown-body pre::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--theme-color-secondary) 50%, transparent);
+}
+
+.markdown-body kbd {
+  border: var(--theme-color-background-border) 1px solid;
+  padding: 0.2em 0.4em;
+  font-size: 0.85em;
+  line-height: 1em;
+  display: inline-block;
+}
+
+.markdown-body details { margin-top: 1em; }
+
+.markdown-body table {
+  box-sizing: border-box;
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 100%;
+  margin: 1em 0;
+}
+.markdown-body table th { font-family: var(--font-sans); }
+.markdown-body table td, .markdown-body table th { padding: 0.25em 0.5em; }
+.markdown-body table tr {
+  border-bottom: 2px solid var(--theme-color-background-border);
+}
+.markdown-body table th:not([align]) { text-align: left; }
+.markdown-body figure figcaption { text-align: center; font-size: 0.8em; }
+.markdown-body ruby > rt { font-size: 65%; }
+.markdown-body ins { background-color: #40fc4033; text-decoration-color: green; }
+
+.markdown-body .tip {
+  border-left: 4px solid color-mix(in oklch, var(--theme-color-primary) 100%, transparent);
+  padding-left: calc(var(--spacing) * 4);
+  margin-block: calc(var(--spacing) * 4);
+  background-color: color-mix(in oklch, var(--theme-color-primary) 10%, transparent);
+  position: relative;
+}
+.markdown-body .tip::before {
+  content: "i";
+  left: calc(var(--spacing) * -0.5);
+  color: var(--theme-color-background-container);
+  width: calc(var(--spacing) * 4);
+  background-color: var(--theme-color-primary);
+  text-align: center;
+  border-radius: 9999px;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1em;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Heading anchor links (added client-side on post pages) */
+.markdown-body .heading-group { position: relative; }
+.markdown-body .anchor {
+  opacity: 0;
+  position: absolute;
+  left: -1.2em;
+  top: 50%;
+  translate: 0 -50%;
+  text-decoration: none !important;
+  transition: opacity 0.15s;
+}
+.markdown-body .heading-group:hover .anchor { opacity: 0.6; }
+
+/* KaTeX */
+.katex-display { margin: 1em 0; }
+
+/* Dark theme span override kept for parity with the reference theme:
+   only activates if html ever gets data-theme*="dark". */
+html[data-theme*="dark"] .astro-code,
+html[data-theme*="dark"] .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
 }

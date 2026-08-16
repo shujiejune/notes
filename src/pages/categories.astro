@@ -1,0 +1,51 @@
+---
+import CategoryTree, { type TreeNode } from "../components/CategoryTree.astro";
+import Icon from "../components/Icon.astro";
+import Layout from "../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("blog")).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+// Build a tree from the directory structure of post IDs
+// (e.g. "rust/unsafe/aliasing" -> rust > unsafe > post).
+const root: TreeNode = { name: "", children: [], posts: [] };
+for (const post of posts) {
+  const segments = post.id.split("/");
+  let node = root;
+  for (const dir of segments.slice(0, -1)) {
+    let child = node.children.find((c) => c.name === dir);
+    if (!child) {
+      child = { name: dir, children: [], posts: [] };
+      node.children.push(child);
+    }
+    node = child;
+  }
+  node.posts.push({ slug: post.id, title: post.data.title });
+}
+
+const sortTree = (n: TreeNode) => {
+  n.children.sort((a, b) => a.name.localeCompare(b.name));
+  n.children.forEach(sortTree);
+};
+sortTree(root);
+---
+
+<Layout title="Categories | Sirius" description="All posts grouped by directory tree.">
+  <article>
+    <div>
+      <h1 class="page-title text-foreground/60 font-sans text-xl md:text-3xl font-extrabold">
+        <span class="inline-flex items-center gap-2">
+          <Icon name="folder-open" class="shrink-0" />
+          Categories
+        </span>
+      </h1>
+    </div>
+    <div>
+      <div class="categories-list">
+        {root.children.map((node) => <CategoryTree node={node} />)}
+      </div>
+    </div>
+  </article>
+</Layout>

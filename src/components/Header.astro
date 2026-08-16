@@ -1,20 +1,27 @@
 ---
 import { SITE_TITLE } from "../consts";
+import { withBase } from "../utils/urls";
 import HeaderLink from "./HeaderLink.astro";
 ---
 
-<header class="border-b border-skin-line bg-skin-fill">
-    <nav class="max-w-7xl px-6 mx-auto flex justify-between items-end">
-        <a
-            href="/"
-            class="py-(--header-padding) font-display text-2xl text-skin-accent-dark active:text-decoration-none"
-            >{SITE_TITLE}</a
-        >
-        <div class="internal-links flex gap-3">
-            <HeaderLink href="/">Home</HeaderLink>
-            <HeaderLink href="/blog">Blog</HeaderLink>
-            <HeaderLink href="/projects">Projects</HeaderLink>
-            <HeaderLink href="/about">About</HeaderLink>
-        </div>
-    </nav>
+<header
+  class="print:hidden flex sticky top-0 font-sans border-background-border bg-background max-lg:items-center max-lg:justify-between max-lg:w-full max-lg:z-50 max-lg:px-2 max-lg:border-b lg:flex-col lg:h-dvh lg:text-lg lg:p-4 lg:shrink-0 lg:grow-0 lg:border-r"
+>
+  <a href={import.meta.env.BASE_URL || "/"} class="flex flex-col items-center gap-2 lg:mt-4">
+    <div class="avatar w-10 md:w-12 lg:hidden">
+      <img src={withBase("/favicon.svg")} alt="Site logo" />
+    </div>
+    <div class="avatar max-lg:hidden w-40">
+      <img src={withBase("/favicon.svg")} alt="Site logo" />
+    </div>
+    <span class="text-lg font-bold max-lg:hidden">{SITE_TITLE}</span>
+  </a>
+  <nav class="links flex items-center gap-2 text-lg lg:text-base lg:flex-col lg:pt-6">
+    <HeaderLink href="/" icon="home" label="Home" />
+    <HeaderLink href="/archives" icon="archive" label="Archives" />
+    <HeaderLink href="/categories" icon="folder-open" label="Categories" />
+    <HeaderLink href="/tags" icon="tag" label="Tags" />
+    <HeaderLink href="/about" icon="user" label="About" />
+  </nav>
+  <div class="flex lg:flex-grow lg:justify-center lg:items-end"></div>
 </header>

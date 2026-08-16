@@ -2,42 +2,47 @@
 // Import the global.css file here so that it is included on
 // all pages through the use of the <BaseHead /> component.
 import "../styles/global.css";
+import "katex/dist/katex.min.css";
 import { SITE_TITLE } from "../consts";
+import { withBase } from "../utils/urls";
 
 interface Props {
-    title: string;
-    description: string;
-    image?: string;
+  title: string;
+  description: string;
+  image?: string;
 }
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-
 const { title, description, image } = Astro.props;
 ---
 
 <!-- Global Metadata -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="icon" type="image/svg+xml" href={withBase("/favicon.svg")} />
+<link rel="sitemap" href={withBase("/sitemap-index.xml")} />
 <link
-    rel="icon"
-    type="image/svg+xml"
-    href={`${import.meta.env.BASE_URL}/favicon.svg`.replace(/\/+/g, "/")}
-/>
-<link rel="sitemap" href={`${import.meta.env.BASE_URL}/sitemap-index.xml`.replace(/\/+/g, "/")} />
-<link
-    rel="alternate"
-    type="application/rss+xml"
-    title={SITE_TITLE}
-    href={new URL("rss.xml", Astro.site)}
+  rel="alternate"
+  type="application/rss+xml"
+  title={SITE_TITLE}
+  href={new URL("rss.xml", Astro.site)}
 />
 <meta name="generator" content={Astro.generator} />
+
+<!-- Fonts: Source Serif 4 (Latin serif) + LXGW WenKai TC (handwriting accents) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&family=LXGW+WenKai+TC&display=swap"
+  rel="stylesheet"
+/>
 
 <!-- Canonical URL -->
 <link rel="canonical" href={canonicalURL} />
 
 <!-- Primary Meta Tags -->
 <title>{title}</title>
-<meta name="title" class="site-title" content={title} />
+<meta name="title" content={title} />
 <meta name="description" content={description} />
 
 <!-- Open Graph / Facebook -->
@@ -45,11 +50,11 @@ const { title, description, image } = Astro.props;
 <meta property="og:url" content={Astro.url} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content={new URL(image || "/favicon.svg", Astro.url)} />
+<meta property="og:image" content={new URL(image || withBase("/favicon.svg"), Astro.url)} />
 
 <!-- Twitter -->
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:url" content={Astro.url} />
 <meta property="twitter:title" content={title} />
 <meta property="twitter:description" content={description} />
-<meta property="twitter:image" content={new URL(image || "/favicon.svg", Astro.url)} />
+<meta property="twitter:image" content={new URL(image || withBase("/favicon.svg"), Astro.url)} />

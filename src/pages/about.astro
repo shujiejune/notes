@@ -1,79 +1,72 @@
 ---
-import BaseHead from "../components/BaseHead.astro";
-import Header from "../components/Header.astro";
-import Footer from "../components/Footer.astro";
+import Icon from "../components/Icon.astro";
+import SocialIcon from "../components/SocialIcon.astro";
+import { SITE_SIGNATURE, SOCIAL_LINKS } from "../consts";
+import Layout from "../layouts/Layout.astro";
 
 const changelog = [
-    {
-        date: "2026-02-17",
-        content: "Completed the functionalities.",
-        link: "/posts/color-theory-update", // Optional link
-    },
-    {
-        date: "2026-02-14",
-        content:
-            "v1: Selected fonts and colors, implemented layout design and deployed to GitHub Pages.",
-    },
-    {
-        date: "2026-02-10",
-        content: "Initial commit. Scaffolded the structure using Astro and Tailwind.",
-    },
+  {
+    date: "2026-08-16",
+    content: "Redesigned the blog after the Krypton 2 theme; added KaTeX and rainbow code brackets.",
+  },
+  {
+    date: "2026-08-16",
+    content: "Migrated the package manager from Bun to pnpm and upgraded to Astro 7.",
+  },
+  {
+    date: "2026-02-14",
+    content: "v1: Selected fonts and colors, implemented layout design and deployed to GitHub Pages.",
+  },
+  {
+    date: "2026-02-10",
+    content: "Initial commit. Scaffolded the structure using Astro and Tailwind.",
+  },
 ];
 ---
 
-<!doctype html>
-<html lang="en">
-    <head>
-        <BaseHead title="About | Sirius" description="About this site and its history." />
-    </head>
-    <body class="flex flex-col">
-        <Header />
+<Layout title="About | Sirius" description="About this site and its history.">
+  <article>
+    <div>
+      <h1 class="page-title text-foreground/60 font-sans text-xl md:text-3xl font-extrabold">
+        <span class="inline-flex items-center gap-2">
+          <Icon name="user" class="shrink-0" />
+          About
+        </span>
+      </h1>
+    </div>
 
-        <main class="max-w-4xl mx-auto px-6 py-12 justify-start">
-            <h1 class="font-sans text-4xl text-skin-accent-dark">About This Site</h1>
+    <div class="markdown-body is-detailed mt-4">
+      <p class="text-lg">{SITE_SIGNATURE}</p>
+      <p>Personal playground to dump my thoughts and handicrafts.</p>
 
-            <div class="prose prose-slate mt-12 mb-12 pb-6 border-b border-skin-line">
-                <p class="text-lg leading-relaxed text-slate-600">
-                    Personal playground to dump my thoughts and handicrafts.
-                </p>
-            </div>
+      <div class="flex justify-start gap-4 mt-4">
+        {
+          SOCIAL_LINKS.map((link) => (
+            <a
+              href={link.url}
+              title={link.label}
+              class="text-foreground/70 hover:text-primary transition-colors"
+            >
+              <span class="sr-only">{link.label}</span>
+              <SocialIcon platform={link.name} />
+            </a>
+          ))
+        }
+      </div>
 
-            <section>
-                <h2 class="font-sans text-2xl text-skin-accent-dark mb-6 flex items-center gap-2">
-                    Changelog
-                </h2>
-
-                <div class="relative border-l-2 border-slate-200 mt-12 ml-3 space-y-8">
-                    {
-                        changelog.map((item) => (
-                            <div class="relative pl-8">
-                                <div class="absolute -left-2.25 top-1.5 h-4 w-4 rounded-full border-2 border-white bg-skin-fill shadow-sm" />
-
-                                <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-4">
-                                    <span class="inline-block px-3 py-1 rounded-md text-xs font-mono font-semibold bg-blue-100 text-blue-700 shrink-0">
-                                        {item.date}
-                                    </span>
-
-                                    <div class="text-slate-600">
-                                        {item.link ? (
-                                            <a
-                                                href={item.link}
-                                                class="hover:text-skin-accent hover:underline underline-offset-4 decoration-2 transition-colors"
-                                            >
-                                                {item.content}
-                                            </a>
-                                        ) : (
-                                            <span>{item.content}</span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    }
-                </div>
-            </section>
-        </main>
-
-        <Footer />
-    </body>
-</html>
+      <h2>Changelog</h2>
+      <div class="tip">
+        <ul>
+          {
+            changelog.map((item) => (
+              <li class="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4">
+                <span class="shrink-0 font-sans text-sm text-foreground/60">{item.date}</span>
+                <span>{item.content}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </article>
+</Layout>
