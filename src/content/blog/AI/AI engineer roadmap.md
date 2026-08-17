@@ -1,8 +1,7 @@
 ---
 title: 'AI Engineer Roadmap'
 description: 'Get prepared to become an AI Engineer.'
-pubDate: 'Jun 19 2024'
-updatedDate: 'Feb 27 2026'
+pubDate: 'Aug 3 2026'
 heroImage: '../../../assets/images/blog-placeholder-1.jpg'
 tags: ['ai', 'ai engineer', 'roadmap']
 ---
