@@ -4,10 +4,4 @@
 export const SITE_TITLE = "Sirius";
 export const SITE_DESCRIPTION = "My blog theme";
 export const SITE_AUTHOR = "Sirius";
-export const SITE_SIGNATURE = "情在綢繆歌白紵，心同慷慨贈青萍。";
-
-export const SOCIAL_LINKS = [
-  { name: "mastodon", url: "https://mstdn.social/@chimonanthus_praecox", label: "Mastodon" },
-  { name: "ao3", url: "https://archiveofourown.org/users/vvithe", label: "AO3" },
-  { name: "github", url: "https://github.com/shujiejune", label: "GitHub" },
-];
+export const SITE_SIGNATURE = "只問真君何處有，不向江湖尋劍仙。";
