@@ -25,3 +25,6 @@ pnpm-debug.log*
 
 # Vim swap files
 *.swp
+
+# Python virtualenvs (e.g. lab code under src/content/blog)
+.venv/

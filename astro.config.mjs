@@ -11,6 +11,7 @@ import remarkGithubBlockquoteAlert from "remark-github-blockquote-alert";
 import tailwindcss from "@tailwindcss/vite";
 
 import { rainbowDelimiters } from "./src/plugins/rainbow-delimiters.js";
+import { rehypeStripLeadingH1 } from "./src/plugins/strip-leading-h1.js";
 
 // The "/notes" base is only required for the GitHub Pages build (project site).
 // Serve the dev server from the root instead of /notes for convenience.
@@ -37,6 +38,7 @@ export default defineConfig({
     processor: unified({
       remarkPlugins: [remarkMath, remarkGithubBlockquoteAlert],
       rehypePlugins: [
+        rehypeStripLeadingH1,
         [rehypeKatex, { strict: false, throwOnError: false }],
       ],
     }),

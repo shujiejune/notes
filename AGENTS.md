@@ -33,21 +33,21 @@ Use [pnpm](https://pnpm.io) as the package manager. The exact version is pinned 
 
 ## Styling
 
-Tailwind v4 is configured **CSS-first** in `src/styles/global.css` (`@import "tailwindcss"`, `@theme` tokens, `@plugin "@tailwindcss/typography"`). Do not add a `tailwind.config.js`; `tailwind.congif.mjs` in the repo root is a leftover v3-style file (note the filename typo) and is not loaded by the v4 Vite plugin in `astro.config.mjs`.
+Tailwind v4 is configured **CSS-first** in `src/styles/global.css` (`@import "tailwindcss"`, `@theme` tokens). Do not add a `tailwind.config.js` — the v4 Vite plugin in `astro.config.mjs` only reads CSS config.
 
 Conventions:
 
 - Theming uses `--color-skin-*` tokens (`skin-base`, `skin-accent`, `skin-fill`, `skin-card`, `skin-line`) that reference RGB CSS variables set per color scheme — prefer these utilities (e.g. `text-skin-base`, `border-skin-line`) over raw colors so dark mode keeps working.
-- Fonts are self-hosted `.woff2` files in `src/assets/fonts/`, registered via `@font-face` in `src/styles/global.css`. To replace a font, convert TTF/OTF with `./ttf-2-woff.sh` and update the matching `@font-face` block; font-family utilities come from the `--font-display` / `--font-sans` / `--font-mono` theme variables.
+- Fonts are self-hosted `.woff2` files in `src/assets/fonts/`, registered via `@font-face` in `src/styles/fonts.css` (imported by `global.css`). To replace a font, download woff2 files (e.g. from Google Fonts, including their `unicode-range` slices for CJK) into `src/assets/fonts/` and update the matching `@font-face` blocks in `fonts.css`; font-family utilities come from the `--font-sans` / `--font-body` / `--font-mono` theme variables.
 - Code blocks are highlighted with Shiki (`tokyo-night`, `wrap: true`) — configured in `astro.config.mjs`, not in CSS.
 
 ## Language / i18n
 
-There is no i18n routing framework. Pages set `<html lang>` (default `zh-Hant`), and `LangToggleButton.astro` toggles `document.documentElement.lang` between `zh-Hant`/`zh-Hans`, persisting to `localStorage["preferred-lang"]`. Font stacks switch via `:lang(zh-Hant)` / `:lang(zh-Hans)` rules in `global.css`. When adding copy, keep it Chinese-first and avoid baking language assumptions into CSS outside these hooks.
+There is no i18n routing framework. `Layout.astro` sets `<html lang="zh-CN">`, and `global.css` switches the CJK font stack (Noto Sans TC vs SC first) via a `:lang(zh-Hant)` rule. When adding copy, keep it Chinese-first and avoid baking language assumptions into CSS outside these hooks.
 
 ## Conventions
 
-- TypeScript strict mode (`astro/tsconfigs/strict`); path aliases `@components/*`, `@layouts/*`, `@objects/*`, `@assets/*`, `@utils/*` (see `tsconfig.json`). Import Zod as `import { z } from "astro/zod"` — the `z` re-export from `astro:content` is deprecated.
+- TypeScript strict mode (`astro/tsconfigs/strict`); path aliases `@components/*`, `@layouts/*`, `@assets/*`, `@utils/*` (see `tsconfig.json`). Import Zod as `import { z } from "astro/zod"` — the `z` re-export from `astro:content` is deprecated.
 - Astro 7 uses the Rust compiler, which is stricter than the old Go compiler: unclosed or invalidly nested tags are build errors, not silently corrected. `compressHTML` defaults to `'jsx'`, so put explicit whitespace (e.g. `{" "}`) between inline elements that must stay separated.
 - Commit messages follow Conventional Commits with a scope, e.g. `feat(components): ...`, `fix(utils): ...`, `chore: ...`.
 - Pushing to `main` triggers a live deployment — keep commits to `main` build-clean.
