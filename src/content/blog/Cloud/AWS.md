@@ -100,7 +100,7 @@ Why pre-signed URLs are standard in SaaS:
 To keep API response times low, write operations and long-running workflows are decoupled.
 
 - SQS (Simple Queue Service): Fully managed message queue for decoupling services. Used for buffering write-heavy events, handling async background jobs (e.g. sending emails, report generation), and isolating failures via Dead Letter Queues (DLQ).
-- Step Functions: Serverless visual state machine that orchestrates multi-step, multi-service workflows. It manages complex business logic, retries, and distributed transactions (e/g., multi-step tenant onboarding, checkout billing sequences, or SAGA pattern compensations).
+- Step Functions: Serverless virtual state machine that orchestrates multi-step, multi-service workflows. It manages complex business logic, retries, and distributed transactions (e/g., multi-step tenant onboarding, checkout billing sequences, or SAGA pattern compensations).
 - EventBridge (Complementary): Serverless event bus to broadcast domain events across microservices using pattern-matching rules.
 
 ### Edge Routing, Ingress & Delivery
@@ -321,6 +321,17 @@ Hybrid architecture:
 - Step Functions is invoked to orchestrate the complex, multi-step transaction for individual orders once an event is consumed.
 
 ### How can you make your app scalable for a big traffic day?
+
+I will put my EC2s on an auto-scaling group, and a load balancer will be distributing the traffic.
+However, for a big traffic day, I'll pre-warm the load balancer so that it can handle the burst.
+Next, if I know what time I'm releasing the product, I will use scheduled scaling, so before the big traffic comes in, multiple EC2 instances will be up and running, ready to serve the traffic.
+I'll also use features like warm pool, so when another instance needs to come up, it's not coming up from totally dormant state. Instead, it's in a hibernating state.
+In addition to that, if the EC2s need to scale further beyond the scheduled scaling limits or warm pool limits, I'll ensure they come up fast by making their AMIs lightweight. Almost all apps use db from the EC2s, so I will use db proxy if I'm using RDS, which will handle orphan connections, reducing the number of additional connections the apps will make, and instead it will reuse the existing connections, making it faster.
+And finally, if I have enterprise support, I will run a process called AWS countdown before the big traffic day, simulating a big traffic with all these measures implemented.
+Account limit is a real thing. If my traffic goes beyond a point where it's hitting some of the limits of how many EC2s can be provisioned in this account, I'll use different account in different regions.
+
+> [!NOTE]
+Going to Kubernetes or serverless does not eliminate the hyper-scale challenges.
 
 ### How do you achieve disaster recovery for your cloud app?
 
