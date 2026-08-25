@@ -4,6 +4,7 @@
   Tokens, fonts, layout grid and markdown styles mirror https://lhcfl.github.io/.
  */
 @import "tailwindcss";
+@import "./fonts.css";
 
 /* ------------------------------------------------------------------ */
 /* Design tokens                                                       */
@@ -17,15 +18,12 @@
   --theme-color-background-container: color-mix(in oklch, var(--theme-color-background) 97%, var(--theme-color-foreground) 3%);
 
   /* Fonts */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --latin-serif-font: "Source Serif 4", "Noto Serif";
-  --cjk-serif-fallback-font: "Source Han Serif", "Source Han Serif VF", "Noto Serif SC", "Noto Serif";
-  --cjk-serif-font: "LXGWNeoZhiSongScreen", var(--cjk-serif-fallback-font);
-  --blog-font-serif: var(--latin-serif-font), var(--cjk-serif-font), "Times New Roman", serif;
-  --blog-heading-font: var(--latin-serif-font), var(--cjk-serif-fallback-font), "Times New Roman", serif;
+  /* Markdown body: Mukta (Latin) + Noto Sans (CJK) */
+  --font-body: "Mukta", var(--cjk-sans-font), ui-sans-serif, system-ui, sans-serif;
+  /* UI text (header, sidebars, TOC, footer, meta): Work Sans (Latin), Noto Sans for CJK */
+  --font-sans: "Work Sans", var(--cjk-sans-font), ui-sans-serif, system-ui, sans-serif;
+  --cjk-sans-font: "Noto Sans SC", "Noto Sans TC";
   --blog-font-mono: "mononoki", "Consolas", "Menlo", "Monaco", "Lucida Console", "Courier New", "Courier", monospace;
-  --lxgw-font: "LXGW WenKai TC", "LXGW WenKai", cursive;
-  --default-font-family: var(--font-sans);
   --default-monoFont-family: var(--blog-font-mono);
 
   /* Layout */
@@ -33,6 +31,12 @@
   --max-main-width: 40em;
   --header-height: calc(15 * var(--spacing));
   --main-pt: 1.5rem;
+}
+
+/* Default CJK stack is SC-first (site default lang is zh-CN = Simplified);
+   switch to TC-first when the page language is Traditional Chinese. */
+:lang(zh-Hant) {
+  --cjk-sans-font: "Noto Sans TC", "Noto Sans SC";
 }
 
 @theme {
@@ -44,26 +48,8 @@
   --color-background-border: var(--theme-color-background-border);
   --color-background-container: var(--theme-color-background-container);
   --font-sans: var(--font-sans);
-  --font-serif: var(--blog-font-serif);
+  --font-body: var(--font-body);
   --font-mono: var(--blog-font-mono);
-  --font-lxgw: var(--lxgw-font);
-}
-
-/* ------------------------------------------------------------------ */
-/* Fonts                                                               */
-/* ------------------------------------------------------------------ */
-@font-face {
-  font-family: "mononoki";
-  src: url("../assets/fonts/mononoki-regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "LXGWNeoZhiSongScreen";
-  src: url("https://cdn.jsdelivr.net/gh/Lhcfl/webfonts@main/LXGWNeoZhiSongScreen.woff2") format("woff2");
-  font-display: swap;
 }
 
 /* ------------------------------------------------------------------ */
@@ -74,11 +60,7 @@ html {
 }
 
 body {
-  font-family: var(--blog-font-serif);
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--blog-heading-font);
+  font-family: var(--font-body);
 }
 
 /* ------------------------------------------------------------------ */
@@ -204,7 +186,7 @@ blog-app > blog-sidebar { grid-area: sidebar; }
 /* ------------------------------------------------------------------ */
 /* Markdown body                                                       */
 /* ------------------------------------------------------------------ */
-.markdown-body { font-size: 14px; }
+.markdown-body { font-size: 18px; }
 
 .markdown-body a {
   color: color-mix(in oklch, var(--theme-color-primary) 50%, var(--theme-color-foreground) 50%);
@@ -267,7 +249,6 @@ blog-app > blog-sidebar { grid-area: sidebar; }
 .markdown-body ol > li { margin-left: 1.6em; list-style: decimal; }
 
 .markdown-body > blockquote:not(:has(blockquote)) {
-  font-family: var(--latin-serif-font), var(--lxgw-font);
   padding: 0 1em 0 2.5em;
   position: relative;
 }
@@ -278,7 +259,6 @@ blog-app > blog-sidebar { grid-area: sidebar; }
 .markdown-body > blockquote:not(:has(blockquote))::before {
   content: "\201D";
   opacity: 0.4;
-  font-family: "Source Serif 4";
   font-style: normal;
   line-height: 1;
   position: absolute;
@@ -385,6 +365,34 @@ blog-app > blog-sidebar { grid-area: sidebar; }
   top: 50%;
   transform: translate(-50%, -50%);
 }
+
+/* GitHub-style alerts (> [!NOTE] etc., rendered by remark-github-blockquote-alert) */
+.markdown-body .markdown-alert {
+  --alert-color: var(--theme-color-primary);
+  margin: 1em 0;
+  padding: 0.25em 1em;
+  border-left: 0.3em solid var(--alert-color);
+  background-color: color-mix(in srgb, var(--alert-color) 6%, transparent);
+}
+.markdown-body .markdown-alert > .markdown-alert-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0.4em 0 0.2em;
+  font-weight: 600;
+  color: var(--alert-color);
+}
+.markdown-body .markdown-alert > .markdown-alert-title svg {
+  width: 1.1em;
+  height: 1.1em;
+  fill: currentColor;
+}
+.markdown-body .markdown-alert > p:not(.markdown-alert-title) { margin: 0.4em 0; }
+.markdown-body .markdown-alert-note     { --alert-color: var(--theme-color-primary); } /* purple (site primary) */
+.markdown-body .markdown-alert-tip      { --alert-color: oklch(55% 0.12 150); } /* green */
+.markdown-body .markdown-alert-important{ --alert-color: oklch(50% 0.20 300); } /* purple */
+.markdown-body .markdown-alert-warning  { --alert-color: oklch(50% 0.11 75);  } /* amber */
+.markdown-body .markdown-alert-caution  { --alert-color: oklch(55% 0.19 27);  } /* red */
 
 /* Heading anchor links (added client-side on post pages) */
 .markdown-body .heading-group { position: relative; }

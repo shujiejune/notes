@@ -37,14 +37,14 @@ if (isRoot) {
 ---
 
 {isRoot ? (
-  <nav class="toc text-sm max-h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar pt-2">
-    <h3 class="font-bold text-md text-skin-base mb-4 pb-2">Table of Contents</h3>
+  <nav class="toc text-[13px] max-h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar pt-2">
+    <h3 class="font-bold text-sm text-skin-base mb-4 pb-2">Table of Contents</h3>
     <ul class="space-y-3">
       {toc.map((heading) => (
         <li>
           {heading.children.length > 0 ? (
             <details open class="group">
-              <summary class="list-none [&::-webkit-details-marker]:hidden cursor-pointer text-skin-base hover:text-skin-accent font-medium transition-colors">
+              <summary class="list-none [&::-webkit-details-marker]:hidden cursor-pointer text-skin-base hover:text-skin-accent transition-colors">
                 <a href={`#${heading.slug}`} class="toc-link inline-block w-full">{heading.text}</a>
               </summary>
               <div class="ml-4 mt-2">
@@ -66,7 +66,7 @@ if (isRoot) {
       <li>
         {heading.children.length > 0 ? (
           <details open class="group">
-            <summary class="list-none [&::-webkit-details-marker]:hidden cursor-pointer text-skin-base hover:text-skin-accent font-medium transition-colors">
+            <summary class="list-none [&::-webkit-details-marker]:hidden cursor-pointer text-skin-base hover:text-skin-accent font-small transition-colors">
               <a href={`#${heading.slug}`} class="toc-link inline-block w-full">{heading.text}</a>
             </summary>
             <div class="ml-4 mt-2">

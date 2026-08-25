@@ -6,6 +6,7 @@ import { unified } from "@astrojs/markdown-remark";
 import { defineConfig } from "astro/config";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import remarkGithubBlockquoteAlert from "remark-github-blockquote-alert";
 
 import tailwindcss from "@tailwindcss/vite";
 
@@ -23,12 +24,18 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    build: {
+      // Never inline webfonts as base64: the CJK faces rely on unicode-range
+      // slicing, and inlining forces every slice into the render-blocking CSS.
+      // false = never inline; undefined = default threshold for everything else.
+      assetsInlineLimit: (filePath) => (filePath.endsWith(".woff2") ? false : undefined),
+    },
   },
   markdown: {
     // Astro 7 defaults to the Sätteri processor; remark/rehype plugins
     // (KaTeX) require the unified processor.
     processor: unified(),
-    remarkPlugins: [remarkMath],
+    remarkPlugins: [remarkMath, remarkGithubBlockquoteAlert],
     rehypePlugins: [
       [rehypeKatex, { strict: false, throwOnError: false }],
     ],
