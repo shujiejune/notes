@@ -33,12 +33,13 @@ export default defineConfig({
   },
   markdown: {
     // Astro 7 defaults to the Sätteri processor; remark/rehype plugins
-    // (KaTeX) require the unified processor.
-    processor: unified(),
-    remarkPlugins: [remarkMath, remarkGithubBlockquoteAlert],
-    rehypePlugins: [
-      [rehypeKatex, { strict: false, throwOnError: false }],
-    ],
+    // (KaTeX, GitHub alerts) require the unified processor, configured here.
+    processor: unified({
+      remarkPlugins: [remarkMath, remarkGithubBlockquoteAlert],
+      rehypePlugins: [
+        [rehypeKatex, { strict: false, throwOnError: false }],
+      ],
+    }),
     shikiConfig: {
       // Dual themes: spans carry `color` (light) + `--shiki-dark` (dark).
       themes: {
