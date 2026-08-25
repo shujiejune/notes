@@ -172,17 +172,6 @@ blog-app > blog-sidebar { grid-area: sidebar; }
   z-index: 1;
 }
 
-/* Sidebar tag cloud: color intensity driven by --percentage (usage freq) */
-.sidebar-badge {
-  --color: color-mix(in oklch, var(--theme-color-primary) var(--percentage, 10%), var(--theme-color-foreground) 5%);
-  text-decoration-color: var(--color);
-  transition: color 0.15s, background-color 0.15s;
-}
-.sidebar-badge:hover {
-  --color: color-mix(in oklch, var(--theme-color-primary) 80%, var(--theme-color-foreground) 10%);
-  color: var(--color);
-}
-
 /* ------------------------------------------------------------------ */
 /* Markdown body                                                       */
 /* ------------------------------------------------------------------ */

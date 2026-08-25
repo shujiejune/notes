@@ -7,13 +7,6 @@ const posts = (await getCollection("blog")).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 const recent = posts.slice(0, 5);
-
-const tagCount = new Map<string, number>();
-for (const p of posts) {
-  for (const t of p.data.tags) tagCount.set(t, (tagCount.get(t) ?? 0) + 1);
-}
-const maxTagCount = Math.max(1, ...tagCount.values());
-const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
 ---
 
 <blog-sidebar
@@ -58,26 +51,6 @@ const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
             ))
           }
         </ul>
-      </div>
-    </div>
-
-    <div class="font-sans">
-      <span class="inline-flex items-center gap-1 text-sm opacity-60 pb-1">
-        <Icon name="tag" class="shrink-0" />
-        <span>Tags</span>
-      </span>
-      <div class="flex flex-wrap gap-2">
-        {
-          tags.map(([tag, count]) => (
-            <a
-              class="sidebar-badge text-xs text-foreground/70 px-1 py-0.5 underline underline-offset-4"
-              href={withBase(`/tags/`)}
-              style={`--percentage: ${Math.round(20 + (60 * count) / maxTagCount)}%`}
-            >
-              {tag}
-            </a>
-          ))
-        }
       </div>
     </div>
   </div>

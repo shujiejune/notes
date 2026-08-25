@@ -20,7 +20,7 @@ for (const post of posts) {
 <Layout title="Archives | Sirius" description="Archive of all posts.">
   <article>
     <div>
-      <h1 class="page-title text-foreground/60 font-sans text-xl md:text-3xl font-extrabold">
+      <h1 class="page-title text-foreground/60 font-sans text-[22px] md:text-[32px] font-extrabold">
         <span class="inline-flex items-center gap-2">
           <Icon name="archive" class="shrink-0" />
           Archives
@@ -32,10 +32,10 @@ for (const post of posts) {
         [...byYear.entries()].map(([year, yearPosts]) => (
           <div class="category-item pt-4 px-2">
             <div class="inline-flex items-center gap-2 justify-between w-full">
-              <h2 class="year my-2 text-2xl font-bold">{year}</h2>
-              <span class="shrink-0 badge badge-primary font-sans !text-xs">{yearPosts.length}</span>
+              <h2 class="year my-2 text-[26px] font-bold">{year}</h2>
+              <span class="shrink-0 badge badge-primary font-sans !text-[14px]">{yearPosts.length}</span>
             </div>
-            <div class="posts-list-plain px-2 text-sm">
+            <div class="posts-list-plain px-2 text-[16px]">
               <ul class="list-disc list-inside marker:text-primary">
                 {yearPosts.map((post) => (
                   <li class="flex items-baseline gap-2">

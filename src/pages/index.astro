@@ -44,10 +44,10 @@ const posts = (await getCollection("blog")).sort(
               </span>
               <span class="flex flex-wrap max-w-full overflow-hidden text-ellipsis gap-2">
                 {post.data.tags.map((tag) => (
-                  <a class="tag flex items-center gap-1 smooth-underline truncate" href={withBase("/tags/")}>
+                  <span class="tag flex items-center gap-1 truncate">
                     <Icon name="tag-single" class="shrink-0" />
                     <span class="truncate">{tag}</span>
-                  </a>
+                  </span>
                 ))}
               </span>
             </p>
