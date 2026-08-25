@@ -7,6 +7,12 @@ const posts = (await getCollection("blog")).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 const recent = posts.slice(0, 5);
+
+const tagCount = new Map<string, number>();
+for (const p of posts) {
+  for (const t of p.data.tags) tagCount.set(t, (tagCount.get(t) ?? 0) + 1);
+}
+const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
 ---
 
 <blog-sidebar
@@ -51,6 +57,26 @@ const recent = posts.slice(0, 5);
             ))
           }
         </ul>
+      </div>
+    </div>
+
+    <div class="font-sans">
+      <span class="inline-flex items-center gap-1 text-sm opacity-60 pb-1">
+        <Icon name="tag" class="shrink-0" />
+        <span>Tags</span>
+      </span>
+      <div class="flex flex-wrap gap-x-2 gap-y-1">
+        {
+          tags.map(([tag]) => (
+            <button
+              type="button"
+              class="tag-link bg-transparent border-none cursor-pointer font-sans text-xs px-1 text-foreground/70 underline decoration-primary underline-offset-4 hover:text-primary transition-colors"
+              data-tag={tag}
+            >
+              {tag}
+            </button>
+          ))
+        }
       </div>
     </div>
   </div>
@@ -107,5 +133,18 @@ const recent = posts.slice(0, 5);
         results!.classList.remove("hidden");
       }, 150);
     });
+
+    // Clicking a sidebar tag runs an exact-match search for that tag
+    for (const btn of document.querySelectorAll<HTMLButtonElement>(".tag-link")) {
+      btn.addEventListener("click", async () => {
+        const tag = btn.dataset.tag;
+        if (!tag) return;
+        input.value = tag;
+        const data = await loadIndex();
+        if (!data) return;
+        render(data.filter((p) => p.tags.includes(tag)));
+        results!.classList.remove("hidden");
+      });
+    }
   }
 </script>
