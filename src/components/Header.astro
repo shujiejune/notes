@@ -9,10 +9,10 @@ import HeaderLink from "./HeaderLink.astro";
 >
   <a href={import.meta.env.BASE_URL || "/"} class="flex flex-col items-center gap-2 lg:mt-4">
     <div class="avatar w-10 md:w-12 lg:hidden">
-      <img src={withBase("/favicon.svg")} alt="Site logo" />
+      <img src={withBase("/author.svg")} alt="Personal image" />
     </div>
-    <div class="avatar max-lg:hidden w-40">
-      <img src={withBase("/favicon.svg")} alt="Site logo" />
+    <div class="avatar max-lg:hidden w-45">
+      <img src={withBase("/author.svg")} alt="Personal image" />
     </div>
     <span class="text-lg font-bold max-lg:hidden">{SITE_TITLE}</span>
   </a>
@@ -22,5 +22,5 @@ import HeaderLink from "./HeaderLink.astro";
     <HeaderLink href="/categories" icon="folder-open" label="Categories" />
     <HeaderLink href="/about" icon="user" label="About" />
   </nav>
-  <div class="flex lg:flex-grow lg:justify-center lg:items-end"></div>
+  <div class="flex lg:grow lg:justify-center lg:items-end"></div>
 </header>

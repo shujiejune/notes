@@ -12,8 +12,8 @@
 :root {
   --theme-color-background: oklch(100% 0 0);
   --theme-color-foreground: oklch(20% 0 0);
-  --theme-color-primary: oklch(60.279% 0.26611 303.088);
-  --theme-color-secondary: oklch(100% 0.4 340);
+  --theme-color-primary: oklch(66.79% 0.1105 132.66);
+  --theme-color-secondary: oklch(83.1% 0.0815 138.98);
   --theme-color-background-border: color-mix(in oklch, var(--theme-color-background) 80%, var(--theme-color-foreground) 20%);
   --theme-color-background-container: color-mix(in oklch, var(--theme-color-background) 97%, var(--theme-color-foreground) 3%);
 
@@ -107,13 +107,12 @@ blog-app > blog-sidebar { grid-area: sidebar; }
 /* Components                                                          */
 /* ------------------------------------------------------------------ */
 .avatar {
-  border-radius: 9999px;
   overflow: hidden;
 }
 .avatar img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
   display: block;
 }
 
@@ -128,6 +127,46 @@ blog-app > blog-sidebar { grid-area: sidebar; }
 .badge-primary {
   color: var(--theme-color-primary);
   background-color: color-mix(in srgb, var(--theme-color-primary) 10%, transparent);
+}
+
+/* Vertical timeline used by the About page changelog */
+.markdown-body .changelog {
+  margin: 1em 0;
+  padding: 0;
+  list-style: none;
+}
+.markdown-body .changelog > li {
+  position: relative;
+  margin: 0;
+  padding: 0 0 1.4em 1.75em;
+  list-style: none;
+}
+.markdown-body .changelog > li:last-child {
+  padding-bottom: 0.2em;
+}
+/* Bullet dot; the latest entry gets a soft halo */
+.markdown-body .changelog > li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.45em;
+  width: 0.6em;
+  height: 0.6em;
+  border-radius: 9999px;
+  background-color: var(--theme-color-primary);
+}
+.markdown-body .changelog > li:first-child::before {
+  box-shadow: 0 0 0 0.25em color-mix(in srgb, var(--theme-color-primary) 20%, transparent);
+}
+/* Connecting line between entries */
+.markdown-body .changelog > li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: calc(0.3em - 0.5px);
+  top: 1.4em;
+  bottom: 0;
+  width: 1px;
+  background-color: var(--theme-color-background-border);
 }
 
 /* Animated underline that grows from the center on hover */
@@ -178,19 +217,21 @@ blog-app > blog-sidebar { grid-area: sidebar; }
 .markdown-body { font-size: 18px; }
 
 .markdown-body a {
-  color: color-mix(in oklch, var(--theme-color-primary) 50%, var(--theme-color-foreground) 50%);
+  color: color-mix(in oklch, var(--theme-color-primary) 90%, var(--theme-color-foreground) 10%);
   text-decoration: none;
 }
 
 .markdown-body b, .markdown-body strong { font-weight: 600; }
 
 .markdown-body a:not(.clickable-bkg-link) {
-  text-decoration: underline dotted color-mix(in oklch, var(--theme-color-primary) 70%, transparent) 0.1em;
+  text-decoration: underline dotted var(--theme-color-primary) 0.1em;
+  /* text-decoration: underline dotted color-mix(in oklch, var(--theme-color-primary) 70%, transparent) 0.1em; */
   text-underline-offset: 4px;
   transition: text-decoration 0.3s;
 }
 .markdown-body a:not(.clickable-bkg-link):hover {
-  text-decoration: underline solid color-mix(in oklch, var(--theme-color-primary) 70%, transparent) 0.2em;
+  text-decoration: underline dotted var(--theme-color-primary) 0.2em;
+  /* text-decoration: underline solid color-mix(in oklch, var(--theme-color-primary) 70%, transparent) 0.2em; */
 }
 
 .markdown-body p { line-height: 1.7; }
@@ -330,7 +371,7 @@ blog-app > blog-sidebar { grid-area: sidebar; }
 .markdown-body table th:not([align]) { text-align: left; }
 .markdown-body figure figcaption { text-align: center; font-size: 0.8em; }
 .markdown-body ruby > rt { font-size: 65%; }
-.markdown-body ins { background-color: #40fc4033; text-decoration-color: green; }
+.markdown-body ins { background-color: #1a6840; text-decoration-color: #229453; }
 
 .markdown-body .tip {
   border-left: 4px solid color-mix(in oklch, var(--theme-color-primary) 100%, transparent);
@@ -378,10 +419,10 @@ blog-app > blog-sidebar { grid-area: sidebar; }
 }
 .markdown-body .markdown-alert > p:not(.markdown-alert-title) { margin: 0.4em 0; }
 .markdown-body .markdown-alert-note     { --alert-color: var(--theme-color-primary); } /* purple (site primary) */
-.markdown-body .markdown-alert-tip      { --alert-color: oklch(55% 0.12 150); } /* green */
-.markdown-body .markdown-alert-important{ --alert-color: oklch(50% 0.20 300); } /* purple */
-.markdown-body .markdown-alert-warning  { --alert-color: oklch(50% 0.11 75);  } /* amber */
-.markdown-body .markdown-alert-caution  { --alert-color: oklch(55% 0.19 27);  } /* red */
+.markdown-body .markdown-alert-tip      { --alert-color: oklch(68.4% 0.144 155); } /* green */
+.markdown-body .markdown-alert-important{ --alert-color: oklch(47.48% 0.1357 325.34); } /* purple */
+.markdown-body .markdown-alert-warning  { --alert-color: oklch(62.35% 0.1455 51.19);  } /* amber */
+.markdown-body .markdown-alert-caution  { --alert-color: oklch(57.66% 0.221 23.81);  } /* red */
 
 /* Heading anchor links (added client-side on post pages) */
 .markdown-body .heading-group { position: relative; }

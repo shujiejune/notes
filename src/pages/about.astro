@@ -5,6 +5,10 @@ import Layout from "../layouts/Layout.astro";
 
 const changelog = [
   {
+    date: "2026-09-28",
+    content: "Changed the favicon and modified the color palette."
+  },
+  {
     date: "2026-08-16",
     content: "Redesigned the blog after the Krypton 2 theme; added KaTeX and rainbow code brackets.",
   },
@@ -38,19 +42,19 @@ const changelog = [
       <p class="text-lg">{SITE_SIGNATURE}</p>
       <p>My learning notes.</p>
 
-      <h2>Changelog</h2>
-      <div class="tip">
-        <ul>
-          {
-            changelog.map((item) => (
-              <li class="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4">
-                <span class="shrink-0 font-sans text-sm text-foreground/60">{item.date}</span>
-                <span>{item.content}</span>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
+      <h2>ChangeLog</h2>
+      <ul class="changelog">
+        {
+          changelog.map((item) => (
+            <li>
+              <time datetime={item.date} class="block font-mono text-sm text-foreground/60">
+                {item.date}
+              </time>
+              <span>{item.content}</span>
+            </li>
+          ))
+        }
+      </ul>
     </div>
   </article>
 </Layout>
