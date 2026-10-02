@@ -169,6 +169,38 @@ blog-app > blog-sidebar { grid-area: sidebar; }
   background-color: var(--theme-color-background-border);
 }
 
+/* Terminal-style `tree` listing (Categories page) */
+.tree-body {
+  margin-top: 1rem;
+  font-family: var(--blog-font-mono);
+  font-size: 0.95em;
+  line-height: 2;
+  overflow-x: auto;
+}
+.tree-row {
+  display: flex;
+  align-items: baseline;
+}
+.tree-row:hover {
+  background-color: color-mix(in srgb, var(--theme-color-primary) 6%, transparent);
+}
+.tree-guide {
+  flex-shrink: 0;
+  white-space: pre;
+  color: color-mix(in srgb, var(--theme-color-foreground) 40%, transparent);
+}
+.tree-dir {
+  font-weight: 700;
+  color: var(--theme-color-primary);
+}
+.tree-file {
+  color: var(--theme-color-foreground);
+}
+.tree-summary {
+  margin-top: 0.75em;
+  color: color-mix(in srgb, var(--theme-color-foreground) 55%, transparent);
+}
+
 /* Animated underline that grows from the center on hover */
 .smooth-underline {
   position: relative;
@@ -312,7 +344,7 @@ blog-app > blog-sidebar { grid-area: sidebar; }
 
 .markdown-body pre {
   font-family: var(--default-monoFont-family);
-  white-space: pre;
+  white-space: pre-wrap;
   padding: 10px 15px;
   overflow-x: auto;
   background-color: var(--theme-color-background-container) !important;
@@ -320,18 +352,25 @@ blog-app > blog-sidebar { grid-area: sidebar; }
   position: relative;
 }
 .markdown-body pre code {
-  white-space: pre;
-  word-wrap: normal;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
   background-color: transparent;
   padding: 0;
   border: none !important;
 }
 .markdown-body pre code span { text-decoration: none !important; }
+/* Reserve a strip above the code so wrapped lines never run under
+   the language label. */
+.markdown-body pre[data-language] {
+  padding-top: calc(10px + 1.4em);
+}
 .markdown-body pre[data-language]::before {
   content: attr(data-language);
   opacity: 0.4;
   position: absolute;
-  right: 2em;
+  top: 10px;
+  right: 15px;
+  line-height: 1.2;
 }
 .markdown-body pre::-webkit-scrollbar { height: 6px; }
 .markdown-body pre::-webkit-scrollbar-track { background: 0 0; border-radius: 3px; }

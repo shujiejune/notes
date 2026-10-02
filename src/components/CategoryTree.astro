@@ -1,5 +1,4 @@
 ---
-import Icon from "./Icon.astro";
 import { withBase } from "../utils/urls";
 
 export interface TreePost {
@@ -15,38 +14,66 @@ export interface TreeNode {
 
 interface Props {
   node: TreeNode;
-  depth?: number;
+  /** Box-drawing prefix inherited from ancestors (e.g. "│   "). */
+  prefix?: string;
+  /** Whether this entry is the last one among its siblings. */
+  isLast?: boolean;
+  /** Render the "." root line instead of a branch + directory name. */
+  isRoot?: boolean;
 }
 
-const { node, depth = 0 } = Astro.props;
+const { node, prefix = "", isLast = true, isRoot = false } = Astro.props;
 
-function countPosts(n: TreeNode): number {
-  return n.posts.length + n.children.reduce((sum, c) => sum + countPosts(c), 0);
-}
+// `tree` lists directories first, then files, both alphabetically.
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+const dirs = [...node.children].sort((a, b) => collator.compare(a.name, b.name));
+const files = [...node.posts].sort((a, b) => collator.compare(a.title, b.title));
+
+type Entry =
+  | { kind: "dir"; node: TreeNode; isLast: boolean }
+  | { kind: "file"; post: TreePost; isLast: boolean };
+
+const entries: Entry[] = [
+  ...dirs.map((child, i): Entry => ({
+    kind: "dir",
+    node: child,
+    isLast: i === dirs.length - 1 && files.length === 0,
+  })),
+  ...files.map((post, i): Entry => ({ kind: "file", post, isLast: i === files.length - 1 })),
+];
+
+const descendantPrefix = isRoot ? "" : `${prefix}${isLast ? "    " : "│   "}`;
 ---
 
-<div class:list={["clickable category-item pt-4 px-2", depth > 0 && "ml-4 border-l border-background-border"]}>
-  <div class="inline-flex items-center gap-2 justify-between w-full">
-    <h2 class="text-[20px] font-bold inline-flex items-center gap-1">
-      <Icon name="folder" class="shrink-0" />
-      <span>{node.name}</span>
-    </h2>
-    <span class="shrink-0 badge badge-primary font-sans !text-[14px]">{countPosts(node)}</span>
-  </div>
-  {
-    node.posts.length > 0 && (
-      <div class="posts-list-plain px-2 text-[16px]">
-        <ul class="list-disc list-inside marker:text-primary">
-          {node.posts.map((p) => (
-            <li class="truncate">
-              <a class="smooth-underline" href={withBase(`/blog/${p.slug}/`)}>
-                <span>{p.title}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
+{
+  isRoot ? (
+    <div class="tree-row">
+      <span class="tree-guide">.</span>
+    </div>
+  ) : (
+    <div class="tree-row">
+      <span class="tree-guide" aria-hidden="true">
+        {prefix}
+        {isLast ? "└── " : "├── "}
+      </span>
+      <span class="tree-dir">{node.name}</span>
+    </div>
+  )
+}
+{
+  entries.map((entry) =>
+    entry.kind === "dir" ? (
+      <Astro.self node={entry.node} prefix={descendantPrefix} isLast={entry.isLast} />
+    ) : (
+      <div class="tree-row">
+        <span class="tree-guide" aria-hidden="true">
+          {descendantPrefix}
+          {entry.isLast ? "└── " : "├── "}
+        </span>
+        <a class="tree-file smooth-underline" href={withBase(`/blog/${entry.post.slug}/`)}>
+          {entry.post.title}
+        </a>
       </div>
-    )
-  }
-  {node.children.map((child) => <Astro.self node={child} depth={depth + 1} />)}
-</div>
+    ),
+  )
+}

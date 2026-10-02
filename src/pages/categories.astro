@@ -25,11 +25,11 @@ for (const post of posts) {
   node.posts.push({ slug: post.id, title: post.data.title });
 }
 
-const sortTree = (n: TreeNode) => {
-  n.children.sort((a, b) => a.name.localeCompare(b.name));
-  n.children.forEach(sortTree);
-};
-sortTree(root);
+// `tree`-style summary footer.
+const countDirs = (n: TreeNode): number =>
+  n.children.length + n.children.reduce((sum, c) => sum + countDirs(c), 0);
+const dirCount = countDirs(root);
+const fileCount = posts.length;
 ---
 
 <Layout title="Categories | Sirius" description="All posts grouped by directory tree.">
@@ -42,9 +42,12 @@ sortTree(root);
         </span>
       </h1>
     </div>
-    <div>
-      <div class="categories-list">
-        {root.children.map((node) => <CategoryTree node={node} />)}
+    <div class="tree-body">
+      <CategoryTree node={root} isRoot />
+      <div class="tree-row tree-summary">
+        <span>
+          {dirCount}{" "}{dirCount === 1 ? "directory" : "directories"},{" "}{fileCount}{" "}{fileCount === 1 ? "file" : "files"}
+        </span>
       </div>
     </div>
   </article>
